@@ -3,30 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/PlayerState.h"
 #include "AbilitySystemInterface.h"
-#include "RPGCharacterBase.generated.h"
+#include "RPGPlayerState.generated.h"
 
 // Forward Declarations
 class UAbilitySystemComponent;
 class UAttributeSet;
 
-UCLASS(Abstract)
-class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface
+/**
+ * 
+ */
+UCLASS()
+class AURA_API ARPGPlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
-
+	
 private:
 
-
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	// Mesh for the characters weapon
-	UPROPERTY(EditAnywhere, Category = "Combat");
-	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
-
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
@@ -34,8 +29,7 @@ protected:
 	TObjectPtr<UAttributeSet> AttributeSet;
 
 public:
-	// Sets default values for this character's properties
-	ARPGCharacterBase();
+	ARPGPlayerState();
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 

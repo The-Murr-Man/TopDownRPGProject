@@ -15,10 +15,17 @@ ARPGCharacterBase::ARPGCharacterBase()
 
 }
 
+
 // Called when the game starts or when spawned
 void ARPGCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
+
+UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
 
