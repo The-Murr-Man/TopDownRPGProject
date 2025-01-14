@@ -5,6 +5,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/RPGPlayerState.h"
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
+#include "Player/RPGPlayerController.h"
+#include "UI/HUD/RPGHUD.h"
 
 
 ARPGCharacter::ARPGCharacter()
@@ -46,5 +48,14 @@ void ARPGCharacter::InitAbilityActorInfo()
 	// Gets and sets ability system component and attribute set from player state
 	AbilitySystemComponent = RpgPlayerState->GetAbilitySystemComponent();
 	AttributeSet = RpgPlayerState->GetAttributeSet();
+
+	
+	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
+	{
+		if (ARPGHUD* RPGHUD = Cast<ARPGHUD>(RPGPlayerContoller->GetHUD()))
+		{
+			RPGHUD->InitOverlay(RPGPlayerContoller, RpgPlayerState, AbilitySystemComponent, AttributeSet);
+		}
+	}
 }
 

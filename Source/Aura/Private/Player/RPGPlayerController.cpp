@@ -28,9 +28,10 @@ void ARPGPlayerController::BeginPlay()
 
 	// This is a singleton used to add mapping contexts for our controller
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	check(Subsystem);
-
-	Subsystem->AddMappingContext(RPGContext, 0);
+	if (Subsystem)
+	{
+		Subsystem->AddMappingContext(RPGContext, 0);
+	}
 
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
