@@ -15,3 +15,8 @@ void URPGWidgetController::BroadcastInitialValues()
 {
 
 }
+
+void URPGWidgetController::BindCallbacksToDependencies()
+{
+
+}
