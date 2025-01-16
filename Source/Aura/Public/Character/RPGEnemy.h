@@ -15,9 +15,6 @@ class AURA_API ARPGEnemy : public ARPGCharacterBase, public IEnemyInterface
 {
 	GENERATED_BODY()
 	
-protected:
-	virtual void BeginPlay() override;
-
 public:
 	ARPGEnemy();
 
@@ -26,4 +23,8 @@ public:
 
 	virtual void UnHighlightActor() override;
 
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void InitAbilityActorInfo() override;
 };

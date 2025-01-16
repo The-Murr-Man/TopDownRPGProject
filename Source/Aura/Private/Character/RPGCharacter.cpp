@@ -44,6 +44,7 @@ void ARPGCharacter::InitAbilityActorInfo()
 
 	if (!RpgPlayerState) return;
 	RpgPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(RpgPlayerState, this);
+	Cast<URPGAbilitySystemComponent>(RpgPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
 
 	// Gets and sets ability system component and attribute set from player state
 	AbilitySystemComponent = RpgPlayerState->GetAbilitySystemComponent();

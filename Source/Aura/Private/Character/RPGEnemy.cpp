@@ -22,10 +22,16 @@ void ARPGEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitAbilityActorInfo();
+}
+
+void ARPGEnemy::InitAbilityActorInfo()
+{
 	if (!AbilitySystemComponent) return;
 
 	// Setting both owning and avatar actors as this actor
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	Cast<URPGAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 }
 
 void ARPGEnemy::HighlightActor()

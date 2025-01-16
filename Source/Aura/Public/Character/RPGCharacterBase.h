@@ -16,8 +16,13 @@ class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInter
 {
 	GENERATED_BODY()
 
-private:
+public:
+	// Sets default values for this character's properties
+	ARPGCharacterBase();
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 protected:
 	// Called when the game starts or when spawned
@@ -33,11 +38,5 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UAttributeSet> AttributeSet;
 
-public:
-	// Sets default values for this character's properties
-	ARPGCharacterBase();
-
-	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-
-	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
+	virtual void InitAbilityActorInfo();
 };

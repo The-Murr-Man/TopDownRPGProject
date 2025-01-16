@@ -14,11 +14,13 @@ class AURA_API ARPGCharacter : public ARPGCharacterBase
 {
 	GENERATED_BODY()
 	
-private:
-	void InitAbilityActorInfo();
+
 public:
 	ARPGCharacter();
 
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
+
+protected:
+	virtual void InitAbilityActorInfo() override;
 };
