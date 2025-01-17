@@ -48,3 +48,8 @@ void ARPGEnemy::UnHighlightActor()
 	GetMesh()->SetRenderCustomDepth(false);
 	WeaponMesh->SetRenderCustomDepth(false);
 }
+
+int32 ARPGEnemy::GetPlayerLevel()
+{
+	return Level;
+}

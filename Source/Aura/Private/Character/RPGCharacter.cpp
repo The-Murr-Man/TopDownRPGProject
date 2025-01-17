@@ -37,6 +37,14 @@ void ARPGCharacter::OnRep_PlayerState()
 	InitAbilityActorInfo();
 }
 
+int32 ARPGCharacter::GetPlayerLevel()
+{
+	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
+
+	check(RpgPlayerState);
+	return RpgPlayerState->GetPlayerLevel();
+}
+
 void ARPGCharacter::InitAbilityActorInfo()
 {
 	// Init ability actor info for the server
@@ -58,5 +66,7 @@ void ARPGCharacter::InitAbilityActorInfo()
 			RPGHUD->InitOverlay(RPGPlayerContoller, RpgPlayerState, AbilitySystemComponent, AttributeSet);
 		}
 	}
+
+	InitializeDefaultAttributes();
 }
 

@@ -2,6 +2,7 @@
 
 
 #include "Character/RPGCharacterBase.h"
+#include "AbilitySystemComponent.h"
 
 // Sets default values
 ARPGCharacterBase::ARPGCharacterBase()
@@ -21,6 +22,27 @@ void ARPGCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void ARPGCharacterBase::InitializeDefaultAttributes()
+{
+	ApplyEffectToSelf(DefaultPrimaryAttributes, 1);
+	ApplyEffectToSelf(DefaultSecondaryAttributes, 1);
+	ApplyEffectToSelf(DefaultVitalAttributes, 1);
+}
+
+void ARPGCharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level)
+{
+	if (!GetAbilitySystemComponent()) return;
+	if (!GameplayEffectClass) return;
+
+	// How to make a context Handle
+	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
+	ContextHandle.AddSourceObject(this);
+
+	// How to make a spec Handle
+	FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
+	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
 }
 
 void ARPGCharacterBase::InitAbilityActorInfo()
