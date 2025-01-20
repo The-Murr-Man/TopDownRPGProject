@@ -7,10 +7,39 @@
 #include "GameplayEffectExtension.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "RPGGameplayTags.h"
 
 URPGAttributeSet::URPGAttributeSet()
 {
+	const FRPGGameplayTags& GameplayTags = FRPGGameplayTags::Get();
 
+	/*
+	* MAPPING PRIMARY ATTRIBUTES GAMEPLAY TAGS TO DELEGATES ->
+	*/
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Strength,GetStrengthAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Intellegence, GetIntellegenceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Resilience, GetResilienceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Primary_Vigor, GetVigorAttribute);
+	/*
+	*  <-
+	*/
+
+	/*
+	* MAPPING SECONDARY ATTRIBUTES GAMEPLAY TAGS TO DELEGATES ->
+	*/
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_Armor, GetArmorAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_ArmorPenetration, GetArmorPenetrationAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_BlockChance, GetBlockChanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritcalHitChance, GetCriticalHitChanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritcalHitDamage, GetCriticalHitDamageAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_CritcalHitResistance, GetCriticalHitResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_HealthRegeneration, GetHealthRegenerationAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_ManaRegeneration, GetManaRegenerationAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxHealth, GetMaxHealthAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Secondary_MaxMana, GetMaxManaAttribute);
+	/*
+	*  <-
+	*/
 }
 
 // Replication Functions

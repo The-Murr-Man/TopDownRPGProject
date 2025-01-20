@@ -14,6 +14,12 @@
  		GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
  		GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
+//typedef TBaseStaticDelegateInstance<FGameplayAttribute(), FDefaultDelegateUserPolicy>::FFuncPtr FAttributeFuncPtr;
+
+template <class T>
+using TStaticFunPtr = typename TBaseStaticDelegateInstance<FGameplayAttribute(), FDefaultDelegateUserPolicy>::FFuncPtr;
+
+
 //Forward Declarations
 class AbilitySystemComponent;
 class Character;
@@ -71,6 +77,8 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
 
+	// Map for gameplay tags
+	TMap<FGameplayTag, TStaticFunPtr<FGameplayAttribute()>> TagsToAttributes;
 
 	/*
 	* Primary Attributes ->

@@ -2,6 +2,7 @@
 
 
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
+#include "RPGGameplayTags.h"
 
 void URPGAbilitySystemComponent::AbilityActorInfoSet()
 {
