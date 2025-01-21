@@ -46,7 +46,19 @@ public:
 	/*
 	* Secondary Attributes End <-
 	*/
-protected:
+
+	/*
+	* Input Tags ->
+	*/
+	FGameplayTag InputTag_LMB;
+	FGameplayTag InputTag_RMB;
+	FGameplayTag InputTag_1;
+	FGameplayTag InputTag_2;
+	FGameplayTag InputTag_3;
+	FGameplayTag InputTag_4;
+	/*
+	* Input Tags End <-
+	*/
 
 private:
 	static FRPGGameplayTags GameplayTags;

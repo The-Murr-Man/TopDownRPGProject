@@ -3,13 +3,21 @@
 
 #include "Player/RPGPlayerController.h"
 #include "EnhancedInputSubsystems.h"
-#include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "Interaction/EnemyInterface.h"
+#include "Input/RPGInputComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/RPGAbilitySystemComponent.h"
+#include "Components/SplineComponent.h"
+#include "RPGGameplayTags.h"
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
 
 ARPGPlayerController::ARPGPlayerController()
 {
 	bReplicates = true;
+
+	Spline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 }
 
 void ARPGPlayerController::PlayerTick(float DeltaTime)
@@ -17,6 +25,11 @@ void ARPGPlayerController::PlayerTick(float DeltaTime)
 	Super::PlayerTick(DeltaTime);
 
 	CursorTrace();
+
+	if (bUseClickToMove)
+	{
+		AutoRun();
+	}
 }
 
 
@@ -45,8 +58,6 @@ void ARPGPlayerController::BeginPlay()
 
 void ARPGPlayerController::CursorTrace()
 {
-	FHitResult CursorHit;
-
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 
 	if (!CursorHit.bBlockingHit) return;
@@ -56,13 +67,30 @@ void ARPGPlayerController::CursorTrace()
 
 	if (LastActor != ThisActor)
 	{
-		if (LastActor)
+		if (LastActor) LastActor->UnHighlightActor();
+		
+		if (ThisActor) ThisActor->HighlightActor();
+	}
+}
+
+void ARPGPlayerController::AutoRun()
+{
+	if (bUseClickToMove)
+	{
+		if (!bAutoRunning) return;
+
+		if (APawn* ControlledPawn = GetPawn())
 		{
-			LastActor->UnHighlightActor();
-		}
-		if (ThisActor)
-		{
-			ThisActor->HighlightActor();
+			const FVector LocationOnSpline = Spline->FindLocationClosestToWorldLocation(ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+			const FVector Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
+			ControlledPawn->AddMovementInput(Direction);
+
+			const float DistanceToDestination = (LocationOnSpline - CachedDestination).Length();
+
+			if (DistanceToDestination <= AutoRunAcceptanceRadius)
+			{
+				bAutoRunning = false;
+			}
 		}
 	}
 }
@@ -71,12 +99,17 @@ void ARPGPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
+	URPGInputComponent* RPGInputComponent = CastChecked<URPGInputComponent>(InputComponent);
 
 	// Binding our move callback function to move action
-	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARPGPlayerController::Move);
-	 
+	if (!bUseClickToMove)
+	{
+		RPGInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARPGPlayerController::Move);
+	}
+	
+	RPGInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 }
+
 void ARPGPlayerController::Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
@@ -91,6 +124,119 @@ void ARPGPlayerController::Move(const FInputActionValue& InputActionValue)
 		ControlledPawn->AddMovementInput(ForwardDir, InputAxisVector.Y);
 		ControlledPawn->AddMovementInput(RightDir, InputAxisVector.X);
 	}
+}
+
+
+void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
+{
+	// Only do this if you want to use Click to move
+	if (bUseClickToMove)
+	{
+		if (InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
+		{
+			bTargeting = ThisActor ? true : false;
+			bAutoRunning = false;
+		}
+	}
+}
+
+void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
+{
+	if (!GetASC()) return;
+
+	// If not Using Click to move
+	if (!bUseClickToMove) GetASC()->AbilityInputTagReleased(InputTag);
+	
+	// If Using Click to move
+	if (bUseClickToMove)
+	{
+		if (!InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
+		{
+			GetASC()->AbilityInputTagReleased(InputTag);
+
+			return;
+		}
+
+		// If HitResult is an enemy
+		if (bTargeting) GetASC()->AbilityInputTagReleased(InputTag);
+		
+		// If HitResult is not an enemy
+		else
+		{
+			APawn* ControlledPawn = GetPawn();
+
+			if (FollowTime <= ShortPressThreshold && ControlledPawn)
+			{
+				if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CachedDestination))
+				{
+					Spline->ClearSplinePoints();
+
+					for (const FVector& PointLoc : NavPath->PathPoints)
+					{
+						Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
+					}
+
+					CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
+					bAutoRunning = true;
+				}
+			}
+
+			FollowTime = 0;
+			bTargeting = false;
+		}
+	}
+}
+
+void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
+{
+	if (!GetASC()) return;
+	
+	// Not using click to move
+	if (!bUseClickToMove)
+	{
+		GetASC()->AbilityInputTagHeld(InputTag);
+	}
+
+	// Only do this if you want to use Click to move
+	if (bUseClickToMove)
+	{
+		if (!InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
+		{
+			GetASC()->AbilityInputTagHeld(InputTag);
+
+			return;
+		}
+
+		// If HitResult is an enemy
+		if (bTargeting) GetASC()->AbilityInputTagHeld(InputTag);
+		
+		// If HitResult is not an enemy
+		else
+		{
+			FollowTime += GetWorld()->GetDeltaSeconds();
+
+			if(CursorHit.bBlockingHit) CachedDestination = CursorHit.ImpactPoint;
+			
+
+			if (APawn* ControlledPawn = GetPawn())
+			{
+				const FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+
+				ControlledPawn->AddMovementInput(WorldDirection);
+			}
+		}
+	}
+}
+
+URPGAbilitySystemComponent* ARPGPlayerController::GetASC()
+{
+	if (!RPGAbilitySystemComponent)
+	{
+		// Setting our ability system component to the result of GetAbilitySystemComponent() from the AbilitySystemBlueprintLibrary
+		RPGAbilitySystemComponent = Cast<URPGAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn<APawn>()));
+	}
+
+	return RPGAbilitySystemComponent;
 }
 
 

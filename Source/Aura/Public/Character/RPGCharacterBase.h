@@ -12,6 +12,7 @@
 class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayEffect;
+class UGameplayAbility;
 
 UCLASS(Abstract)
 class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -34,11 +35,17 @@ protected:
 	void InitializeDefaultAttributes();
 	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass,float Level);
 
-	
+	void AddCharacterAbilities();
+
+	virtual FVector GetCombatSocketLocation() { return WeaponMesh->GetSocketLocation(WeaponTipSocketName); };
 
 	// Mesh for the characters weapon
 	UPROPERTY(EditAnywhere, Category = "Combat");
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+
+	// Weapon Socket used for projectile spawning
+	UPROPERTY(EditAnywhere, Category = "Combat");
+	FName WeaponTipSocketName;
 
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -54,4 +61,9 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Attributes);
 	TSubclassOf<UGameplayEffect> DefaultVitalAttributes;
+
+private:
+
+	UPROPERTY(EditAnywhere, Category = "Abilities");
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
 };

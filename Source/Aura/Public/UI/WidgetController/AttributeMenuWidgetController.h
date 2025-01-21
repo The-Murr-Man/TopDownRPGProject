@@ -9,6 +9,9 @@
 // Forward Declarations
 struct FRPGAttributeInfo;
 class UAttributeInfo;
+struct FGameplayTag;
+struct FGameplayAttribute;
+
 // Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeInfoSigniture, const FRPGAttributeInfo&, Info);
 
@@ -32,7 +35,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UAttributeInfo> AttributeInfo;
 
-	
-
 private:
+	void BroadcastAttributeInfo(const FGameplayTag& AttributeTag, const FGameplayAttribute& Attribute);
 };

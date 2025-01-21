@@ -3,6 +3,7 @@
 
 #include "Character/RPGCharacterBase.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/RPGAbilitySystemComponent.h"
 
 // Sets default values
 ARPGCharacterBase::ARPGCharacterBase()
@@ -43,6 +44,14 @@ void ARPGCharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayE
 	// How to make a spec Handle
 	FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
+}
+
+void ARPGCharacterBase::AddCharacterAbilities()
+{
+	URPGAbilitySystemComponent* RPGASC = CastChecked<URPGAbilitySystemComponent>(AbilitySystemComponent);
+	if (!HasAuthority()) return;
+
+	RPGASC->AddCharacterAbilities(StartupAbilities);
 }
 
 void ARPGCharacterBase::InitAbilityActorInfo()
