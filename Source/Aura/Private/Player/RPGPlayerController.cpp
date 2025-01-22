@@ -105,7 +105,15 @@ void ARPGPlayerController::SetupInputComponent()
 	if (!bUseClickToMove)
 	{
 		RPGInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARPGPlayerController::Move);
+		
 	}
+
+	else
+	{
+		RPGInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &ARPGPlayerController::ShiftPressed);
+		RPGInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &ARPGPlayerController::ShiftReleased);
+	}
+
 	
 	RPGInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 }
@@ -156,12 +164,11 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 			return;
 		}
-
-		// If HitResult is an enemy
-		if (bTargeting) GetASC()->AbilityInputTagReleased(InputTag);
 		
-		// If HitResult is not an enemy
-		else
+		GetASC()->AbilityInputTagReleased(InputTag);
+
+		// If HitResult is not an enemy and not holding shift key
+		if (!bTargeting && !bShiftKeyDown)
 		{
 			APawn* ControlledPawn = GetPawn();
 
@@ -207,8 +214,8 @@ void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 			return;
 		}
 
-		// If HitResult is an enemy
-		if (bTargeting) GetASC()->AbilityInputTagHeld(InputTag);
+		// If HitResult is an enemy or shift key held
+		if (bTargeting||bShiftKeyDown) GetASC()->AbilityInputTagHeld(InputTag);
 		
 		// If HitResult is not an enemy
 		else
