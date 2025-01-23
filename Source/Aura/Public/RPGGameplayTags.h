@@ -60,6 +60,18 @@ public:
 	* Input Tags End <-
 	*/
 
+
+	FGameplayTag Damage;
+
+	/*
+	* Effect Tags ->
+	*/
+
+	FGameplayTag Effects_HitReact;
+
+	/*
+	* Effect Tags <-
+	*/
 private:
 	static FRPGGameplayTags GameplayTags;
 };

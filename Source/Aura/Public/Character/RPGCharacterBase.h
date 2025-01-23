@@ -13,6 +13,7 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UGameplayEffect;
 class UGameplayAbility;
+class UAnimMontage;
 
 UCLASS(Abstract)
 class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -27,15 +28,33 @@ public:
 
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override { return HitReactMontage; };
+
+	// Used on Server
+	virtual void Die() override;
+
+	// Used on both server and client
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastHandleDeath();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo();
 
-	void InitializeDefaultAttributes();
+	virtual void InitializeDefaultAttributes();
 	void ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass,float Level);
 
 	void AddCharacterAbilities();
+
+	// Swaps Character and weapon materials to dissolve mat
+	void Dissolve();
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartDissolveTimeline(UMaterialInstanceDynamic* DynamicMaterialInstance);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartWeaponDissolveTimeline(UMaterialInstanceDynamic* DynamicMaterialInstance);
 
 	virtual FVector GetCombatSocketLocation() { return WeaponMesh->GetSocketLocation(WeaponTipSocketName); };
 
@@ -46,6 +65,13 @@ protected:
 	// Weapon Socket used for projectile spawning
 	UPROPERTY(EditAnywhere, Category = "Combat");
 	FName WeaponTipSocketName;
+
+	// Dissolve Effects
+	UPROPERTY(BlueprintReadOnly, EditAnywhere);
+	TObjectPtr<UMaterialInstance> DissolveMaterialInstance;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere);
+	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
 
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
@@ -66,4 +92,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Abilities");
 	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+
+	UPROPERTY(EditAnywhere, Category = "Combat");
+	TObjectPtr<UAnimMontage> HitReactMontage;
 };

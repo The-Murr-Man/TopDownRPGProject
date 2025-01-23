@@ -26,6 +26,8 @@ ARPGCharacterBase::ARPGCharacterBase()
 }
 
 
+
+
 // Called when the game starts or when spawned
 void ARPGCharacterBase::BeginPlay()
 {
@@ -62,13 +64,54 @@ void ARPGCharacterBase::AddCharacterAbilities()
 	RPGASC->AddCharacterAbilities(StartupAbilities);
 }
 
+void ARPGCharacterBase::Dissolve()
+{
+	if (!DissolveMaterialInstance && !WeaponDissolveMaterialInstance) return;
+
+	// Dissolve for Character Mesh
+	UMaterialInstanceDynamic* DynamicMatInst = UMaterialInstanceDynamic::Create(DissolveMaterialInstance,this);
+	GetMesh()->SetMaterial(0, DynamicMatInst);
+
+	StartDissolveTimeline(DynamicMatInst);
+
+	// Dissolve for Weapon Mesh
+	UMaterialInstanceDynamic* WeaponDynamicMatInst = UMaterialInstanceDynamic::Create(WeaponDissolveMaterialInstance, this);
+	WeaponMesh->SetMaterial(0, WeaponDynamicMatInst);
+
+	StartWeaponDissolveTimeline(WeaponDynamicMatInst);
+}
+
 void ARPGCharacterBase::InitAbilityActorInfo()
 {
+}
+
+void ARPGCharacterBase::Die()
+{
+	// Detaches Weapon
+	WeaponMesh->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+	MulticastHandleDeath();
+}
+
+void ARPGCharacterBase::MulticastHandleDeath_Implementation()
+{
+	// Simulate Physics for weapon
+	WeaponMesh->SetSimulatePhysics(true);
+	WeaponMesh->SetEnableGravity(true);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+	// Simulate Physics for Characters
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+
+	// Capsule
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Dissolve();
 }
 
 UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
-
-

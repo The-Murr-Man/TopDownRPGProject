@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "RPGGameModeBase.generated.h"
 
+class UCharacterClassInfo;
+
 /**
  * 
  */
@@ -14,4 +16,8 @@ class AURA_API ARPGGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+public:
+
+	UPROPERTY(EditDefaultsOnly, Category = "Character Class Defaults")
+	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 };

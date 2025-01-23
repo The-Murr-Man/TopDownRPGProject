@@ -8,6 +8,9 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "RPGGameplayTags.h"
+#include "Interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/RPGPlayerController.h"
 
 URPGAttributeSet::URPGAttributeSet()
 {
@@ -125,11 +128,12 @@ void URPGAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData&
 	{
 		Props.TargetAvatarActor = Data.Target.GetAvatarActor();
 		Props.TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
-		Props.SourceCharacter = Cast<ACharacter>(Props.TargetAvatarActor);
+		Props.TargetCharacter = Cast<ACharacter>(Props.TargetAvatarActor);
 
 		Props.TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Props.TargetAvatarActor);
 	}
 }
+
 
 void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
 {
@@ -143,14 +147,63 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth(), 0, GetMaxHealth()));
-		UE_LOG(LogTemp, Warning, TEXT("Changed Health on %s, Health %f"), *Props.TargetAvatarActor->GetName(), GetHealth());
 	}
 
 	if (Data.EvaluatedData.Attribute == GetManaAttribute())
 	{
 		SetMana(FMath::Clamp(GetMana(), 0, GetMaxMana()));
 	}
+
+	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
+	{
+		const float LocalIncomingDamage = GetIncomingDamage();
+		SetIncomingDamage(0);
+
+		if (LocalIncomingDamage > 0)
+		{
+			const float NewHealth = GetHealth() - LocalIncomingDamage;
+			SetHealth(FMath::Clamp(NewHealth, 0, GetMaxHealth()));
+
+			const bool bFatal = NewHealth <= 0;
+
+			if (bFatal)
+			{
+				GEngine->AddOnScreenDebugMessage(1, 3, FColor::Purple, TEXT("Enemy Dead"));
+
+				ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor);
+				if (!CombatInterface) return;
+
+				CombatInterface->Die();
+			}
+
+			else
+			{
+				
+				// Activate Ability if enemy has specific tag
+				FGameplayTagContainer TagContainer;
+				TagContainer.AddTag(FRPGGameplayTags::Get().Effects_HitReact);
+				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+			}
+
+			ShowFloatingText(Props, LocalIncomingDamage);
+		}
+	}
 }
+
+void URPGAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage)
+{
+	// If the player is not hitting themselves
+	if (Props.SourceCharacter != Props.TargetCharacter)
+	{
+		// Cast to our playercontroller
+		if (ARPGPlayerController* PC = Cast<ARPGPlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter, 0)))
+		{
+			// Calls ShowDamageNumber from player controller passing in the damage
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter);
+		}
+	}
+}
+
 
 /*
 * Primary Attribute Rep Functions ->

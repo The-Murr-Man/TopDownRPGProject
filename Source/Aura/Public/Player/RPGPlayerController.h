@@ -15,6 +15,7 @@ class IEnemyInterface;
 class URPGInputConfig;
 class URPGAbilitySystemComponent;
 class USplineComponent;
+class UDamageTextComponent;
 
 /**
  * 
@@ -29,6 +30,9 @@ public:
 
 	virtual void PlayerTick(float DeltaTime) override;
 
+	UFUNCTION(Client,Reliable)
+	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
@@ -42,8 +46,7 @@ private:
 	void ShiftPressed() { bShiftKeyDown = true; };
 	void ShiftReleased() { bShiftKeyDown = false; };
 
-	bool bShiftKeyDown = false;
-
+	void AutoRun();
 
 	// Ability Callbacks
 	void AbilityInputTagPressed(FGameplayTag InputTag);
@@ -77,8 +80,12 @@ private:
 	TScriptInterface<IEnemyInterface> ThisActor;
 
 	FHitResult CursorHit;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
+
 	// Click To Move Variables
-	void AutoRun();
+	bool bShiftKeyDown = false;
 
 	FVector CachedDestination = FVector::ZeroVector;
 	float FollowTime = 0;

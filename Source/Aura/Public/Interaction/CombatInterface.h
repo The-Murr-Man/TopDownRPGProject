@@ -6,6 +6,9 @@
 #include "UObject/Interface.h"
 #include "CombatInterface.generated.h"
 
+// Forward Declarations
+class UAnimMontage;
+
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI,BlueprintType)
 class UCombatInterface : public UInterface
@@ -28,4 +31,9 @@ public:
 
 	UFUNCTION(BlueprintCallable,BlueprintImplementableEvent)
 	void UpdateFacingTarget(const FVector& Target);
+
+	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
+	UAnimMontage* GetHitReactMontage();
+
+	virtual void Die() = 0;
 };

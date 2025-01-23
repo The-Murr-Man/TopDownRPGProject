@@ -157,6 +157,15 @@ public:
 	ATTRIBUTE_ACCESSORS(URPGAttributeSet, ManaRegeneration);
 	// <-
 
+	/*
+	* Meta Attributes ->
+	*/
+
+	UPROPERTY(BlueprintReadOnly, Category = "Meta Attributes")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(URPGAttributeSet, IncomingDamage);
+	// <-
+
 
 	// Primary Attribute Replication functions ->
 	UFUNCTION()
@@ -214,4 +223,6 @@ public:
 private:
 
 	void SetEffectProperties(const FGameplayEffectModCallbackData& Data, FEffectProperties& Props);
+
+	void ShowFloatingText(const FEffectProperties& Props, float Damage);
 };

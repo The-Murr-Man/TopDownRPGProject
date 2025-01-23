@@ -12,6 +12,8 @@
 #include "RPGGameplayTags.h"
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
+#include "GameFramework/Character.h"
+#include "UI/Widget/DamageTextComponent.h"
 
 ARPGPlayerController::ARPGPlayerController()
 {
@@ -31,6 +33,7 @@ void ARPGPlayerController::PlayerTick(float DeltaTime)
 		AutoRun();
 	}
 }
+
 
 
 void ARPGPlayerController::BeginPlay()
@@ -54,6 +57,25 @@ void ARPGPlayerController::BeginPlay()
 	InputModeData.SetHideCursorDuringCapture(false);
 
 	SetInputMode(InputModeData);
+}
+
+void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter)
+{
+	if (IsValid(TargetCharacter) && DamageTextComponentClass)
+	{
+		// Creating new Damage Text Comp
+		UDamageTextComponent* DamageText = NewObject<UDamageTextComponent>(TargetCharacter, DamageTextComponentClass);
+		DamageText->RegisterComponent();
+
+		// Attaches DamageText to targets root component
+		DamageText->AttachToComponent(TargetCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+		// Detaches DamageText
+		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+		// Sets DamageText to DamageAmount
+		DamageText->SetDamageText(DamageAmount);
+	}
 }
 
 void ARPGPlayerController::CursorTrace()
