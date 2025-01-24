@@ -11,6 +11,7 @@
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "Player/RPGPlayerController.h"
+#include "AbilitySystem/RPGAbilitySystemLibrary.h"
 
 URPGAttributeSet::URPGAttributeSet()
 {
@@ -185,12 +186,15 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
 			}
 
-			ShowFloatingText(Props, LocalIncomingDamage);
+			const bool bBlock = URPGAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+			const bool bCrit = URPGAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+
+			ShowFloatingText(Props, LocalIncomingDamage,bBlock,bCrit);
 		}
 	}
 }
 
-void URPGAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage)
+void URPGAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage, bool bBlockedHit, bool bCriticalHit)
 {
 	// If the player is not hitting themselves
 	if (Props.SourceCharacter != Props.TargetCharacter)
@@ -199,7 +203,7 @@ void URPGAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Da
 		if (ARPGPlayerController* PC = Cast<ARPGPlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter, 0)))
 		{
 			// Calls ShowDamageNumber from player controller passing in the damage
-			PC->ShowDamageNumber(Damage, Props.TargetCharacter);
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit,bCriticalHit);
 		}
 	}
 }

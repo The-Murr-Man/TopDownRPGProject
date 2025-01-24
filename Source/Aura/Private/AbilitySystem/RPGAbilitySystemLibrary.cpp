@@ -10,7 +10,13 @@
 #include "UI/WidgetController/RPGWidgetController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Game/RPGGameModeBase.h"
+#include "RPGAbilityTypes.h"
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <returns></returns>
 UOverlayWidgetController* URPGAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
@@ -30,6 +36,11 @@ UOverlayWidgetController* URPGAbilitySystemLibrary::GetOverlayWidgetController(c
 	return nullptr;
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <returns></returns>
 UAttributeMenuWidgetController* URPGAbilitySystemLibrary::GetAttributeMenuWidgetController(const UObject* WorldContextObject)
 {
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
@@ -49,16 +60,20 @@ UAttributeMenuWidgetController* URPGAbilitySystemLibrary::GetAttributeMenuWidget
 	return nullptr;
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <param name="CharacterClass"></param>
+/// <param name="Level"></param>
+/// <param name="ASC"></param>
 void URPGAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC)
 {
-	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!RPGGameMode) return;
-
 	// Set the avatar actor from the ASC
 	AActor* AvatarActor = ASC->GetAvatarActor();
 
 	// Assign CharacterClassInfo from the GameMode
-	UCharacterClassInfo* CharacterClassInfo = RPGGameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 
 	// Assign ClassDefaultInfo
 	FCharacterClassDefaultInfo ClassDefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
@@ -112,18 +127,89 @@ void URPGAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldC
 	*/
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <param name="ASC"></param>
 void URPGAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
 {
-	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!RPGGameMode) return;
-
 	// Assign CharacterClassInfo from the GameMode
-	UCharacterClassInfo* CharacterClassInfo = RPGGameMode->CharacterClassInfo;
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 
 	for (TSubclassOf<UGameplayAbility> AbilityClass : CharacterClassInfo->CommonAbilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 
 		ASC->GiveAbility(AbilitySpec);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <returns></returns>
+UCharacterClassInfo* URPGAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
+{
+	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!RPGGameMode) return nullptr;
+
+	return RPGGameMode->CharacterClassInfo;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
+bool URPGAbilitySystemLibrary::IsBlockedHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->IsBlockedHit();
+	}
+
+	return false;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
+bool URPGAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->IsCriticalHit();
+	}
+
+	return false;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="EffectContextHandle, Passed in as a UPARAM(ref) to make it an input parameter"></param>
+/// <param name="bInIsBlockedHit"></param>
+void URPGAbilitySystemLibrary::SetIsBlockedHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bInIsBlockedHit)
+{
+	if (FRPGGameplayEffectContext* RPGContext = static_cast< FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->SetIsBlockedlHit(bInIsBlockedHit);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="EffectContextHandle, Passed in as a UPARAM(ref) to make it an input parameter "></param> 
+/// <param name="bInIsCriticalHit"></param>
+void URPGAbilitySystemLibrary::SetIsCriticalHit(UPARAM(ref)FGameplayEffectContextHandle& EffectContextHandle, bool bInIsCriticalHit)
+{
+	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->SetIsCriticalHit(bInIsCriticalHit);
 	}
 }

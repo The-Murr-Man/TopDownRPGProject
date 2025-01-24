@@ -59,7 +59,7 @@ void ARPGPlayerController::BeginPlay()
 	SetInputMode(InputModeData);
 }
 
-void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter)
+void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit)
 {
 	if (IsValid(TargetCharacter) && DamageTextComponentClass)
 	{
@@ -74,7 +74,7 @@ void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, A
 		DamageText->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
 		// Sets DamageText to DamageAmount
-		DamageText->SetDamageText(DamageAmount);
+		DamageText->SetDamageText(DamageAmount, bBlockedHit,bCriticalHit);
 	}
 }
 
