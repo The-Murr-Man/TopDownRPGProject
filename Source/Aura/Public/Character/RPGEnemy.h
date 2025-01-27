@@ -11,7 +11,8 @@
 
 // Forward Declarations
 class UWidgetComponent;
-
+class UBehaviorTree;
+class ARPGAIController;
 /**
  * 
  */
@@ -22,6 +23,8 @@ class AURA_API ARPGEnemy : public ARPGCharacterBase, public IEnemyInterface
 	
 public:
 	ARPGEnemy();
+
+	virtual void PossessedBy(AController* NewController) override;
 
 	// Enemy Interface functions
 	virtual void HighlightActor() override;
@@ -66,4 +69,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<UWidgetComponent> HealthBar;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
+
+	UPROPERTY()
+	TObjectPtr<ARPGAIController> RPGAIController;
 };

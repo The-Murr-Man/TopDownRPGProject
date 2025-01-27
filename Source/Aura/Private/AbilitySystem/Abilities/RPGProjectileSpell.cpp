@@ -25,7 +25,6 @@ void URPGProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 	{
 		const FVector SocketLocation = CombatInterface->GetCombatSocketLocation();
 		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
-		Rotation.Pitch = 0;
 
 		FTransform SpawnTransform;
 		SpawnTransform.SetLocation(SocketLocation);
@@ -47,10 +46,13 @@ void URPGProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 		// Gets the GameplayTags for our singleton
 		FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
 
-		// Gets Damage at the abilities level from curve;
-		const float ScaledDamage = Damage.GetValueAtLevel(10);
-
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Damage,ScaledDamage);
+		for (auto& Pair : DamageTypes)
+		{
+			// Gets Damage at the abilities level from curve;
+			const float ScaledDamage = Pair.Value.GetValueAtLevel(GetAbilityLevel());
+			UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Pair.Key, ScaledDamage);
+		}
+		
 		Projectile->DamageEffectSpecHandle = SpecHandle;
 
 		Projectile->FinishSpawning(SpawnTransform);

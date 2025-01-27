@@ -19,6 +19,13 @@ struct RPGDamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitDamage);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitResistance);
 
+	DECLARE_ATTRIBUTE_CAPTUREDEF(ArcaneResistance);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(FireResistance);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(LightningResistance);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(PhysicalResistance);
+
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagsToCaptureDefs;
+
 	RPGDamageStatics()
 	{
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, Armor, Target, false);
@@ -27,6 +34,24 @@ struct RPGDamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, CriticalHitChance, Source, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, CriticalHitDamage, Source, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, CriticalHitResistance, Target, false);
+
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, ArcaneResistance, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, FireResistance, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, LightningResistance, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URPGAttributeSet, PhysicalResistance, Target, false);
+
+
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Secondary_Armor, ArmorDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Secondary_BlockChance, BlockChanceDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Secondary_ArmorPenetration, ArmorPenetrationDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Secondary_CritcalHitChance, CriticalHitChanceDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Secondary_CritcalHitDamage, CriticalHitDamageDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Secondary_CritcalHitResistance, CriticalHitResistanceDef);
+
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Resistance_Arcane, ArcaneResistanceDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Resistance_Fire, FireResistanceDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Resistance_Lightning, LightningResistanceDef);
+		TagsToCaptureDefs.Add(FRPGGameplayTags::Get().Attributes_Resistance_Physical, PhysicalResistanceDef);
 	}
 };
 
@@ -44,6 +69,11 @@ UExecCalc_Damage::UExecCalc_Damage()
 	RelevantAttributesToCapture.Add(DamageStatics().CriticalHitChanceDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CriticalHitDamageDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CriticalHitResistanceDef);
+
+	RelevantAttributesToCapture.Add(DamageStatics().ArcaneResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().FireResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().LightningResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatics().PhysicalResistanceDef);
 }
 
 void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
@@ -79,7 +109,26 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	//////////////////////////////////////////////
 
 	// Get Damage Set By Caller Magnitude
-	float Damage = Spec.GetSetByCallerMagnitude(FRPGGameplayTags::Get().Damage);
+	float Damage = 0;
+
+	for (const auto& Pair : FRPGGameplayTags::Get().DamageTypesToResistances)
+	{
+		const FGameplayTag DamageType = Pair.Key;
+		const FGameplayTag ResistanceTag = Pair.Value;
+
+		checkf(RPGDamageStatics().TagsToCaptureDefs.Contains(ResistanceTag), TEXT("TagsToCaptureDefs doesn't containg tag [%s] in ExecCalc_Damage"), *ResistanceTag.ToString());
+		const FGameplayEffectAttributeCaptureDefinition CaptureDef = RPGDamageStatics().TagsToCaptureDefs[ResistanceTag];
+
+		float DamageTypeValue = Spec.GetSetByCallerMagnitude(Pair.Key);
+
+		float Resistance = 0;
+		ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(CaptureDef, EvaluationParameters, Resistance);
+		Resistance = FMath::Clamp(Resistance,0, 75);
+
+		DamageTypeValue *= (100 - Resistance) / 100;
+		
+		Damage += DamageTypeValue;
+	}
 
 	// Capture Block Chance on target and Determine if there was a successful block ->
 	float TargetBlockChance = 0;

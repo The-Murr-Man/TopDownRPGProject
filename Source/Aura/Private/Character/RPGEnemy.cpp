@@ -10,6 +10,9 @@
 #include "AbilitySystem/RPGAbilitySystemLibrary.h"
 #include "RPGGameplayTags.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "AI/RPGAIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 
 ARPGEnemy::ARPGEnemy()
 {
@@ -17,7 +20,13 @@ ARPGEnemy::ARPGEnemy()
 
 	AbilitySystemComponent = CreateDefaultSubobject<URPGAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
-	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
 	AttributeSet = CreateDefaultSubobject<URPGAttributeSet>("AttributeSet");
 
@@ -25,14 +34,34 @@ ARPGEnemy::ARPGEnemy()
 	HealthBar->SetupAttachment(GetRootComponent());
 }
 
+void ARPGEnemy::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	//
+	if (!HasAuthority()) return;
+	RPGAIController = Cast<ARPGAIController>(NewController);
+
+	RPGAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	RPGAIController->RunBehaviorTree(BehaviorTree);
+	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
+
+	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangerAttacker"), CharacterClass != ECharacterClass::Warrior);
+	
+}
+
 void ARPGEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
 	GetCharacterMovement()->MaxWalkSpeed =  BaseMaxWalkSpeed;
-
 	InitAbilityActorInfo();
-	URPGAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+	
+	// Check to see if player is server for startup abilities
+	if (HasAuthority())
+	{
+		URPGAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+	}
 
 	if(URPGUserWidget* RPGUserWidget = Cast<URPGUserWidget>(HealthBar->GetUserWidgetObject()))
 	{
@@ -72,7 +101,10 @@ void ARPGEnemy::InitAbilityActorInfo()
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<URPGAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
 
-	InitializeDefaultAttributes();
+	if (HasAuthority())
+	{
+		InitializeDefaultAttributes();
+	}
 }
 
 void ARPGEnemy::InitializeDefaultAttributes()
@@ -84,6 +116,7 @@ void ARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCoun
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0 : BaseMaxWalkSpeed;
+	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 }
 
 void ARPGEnemy::HighlightActor()

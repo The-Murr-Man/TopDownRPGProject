@@ -88,6 +88,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Attributes);
 	TSubclassOf<UGameplayEffect> DefaultVitalAttributes;
 
+	//UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Attributes);
+	//TSubclassOf<UGameplayEffect> DefaultResistanceAttributes;
+
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Abilities");

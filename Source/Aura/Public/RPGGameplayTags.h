@@ -60,8 +60,31 @@ public:
 	* Input Tags End <-
 	*/
 
-
+	/*
+	* Damage Type Tags ->
+	*/
 	FGameplayTag Damage;
+	FGameplayTag Damage_Fire;
+	FGameplayTag Damage_Lightning;
+	FGameplayTag Damage_Arcane;
+	FGameplayTag Damage_Physical;
+
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
+	/*
+	* Damage Type Tags End <-
+	*/
+
+	/*
+	* Damage Resistances Tags ->
+	*/
+	FGameplayTag Attributes_Resistance_Fire;
+	FGameplayTag Attributes_Resistance_Lightning;
+	FGameplayTag Attributes_Resistance_Arcane;
+	FGameplayTag Attributes_Resistance_Physical;
+
+	/*
+	* Damage Resistances Tags End <-
+	*/
 
 	/*
 	* Effect Tags ->

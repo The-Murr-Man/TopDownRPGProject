@@ -44,6 +44,17 @@ URPGAttributeSet::URPGAttributeSet()
 	/*
 	*  <-
 	*/
+
+	/*
+	* MAPPING SECONDARY ATTRIBUTES GAMEPLAY TAGS TO DELEGATES ->
+	*/
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Arcane, GetArcaneResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Fire, GetFireResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Lightning, GetLightningResistanceAttribute);
+	TagsToAttributes.Add(GameplayTags.Attributes_Resistance_Physical, GetPhysicalResistanceAttribute);
+	/*
+	*  <-
+	*/
 }
 
 // Replication Functions
@@ -75,6 +86,12 @@ void URPGAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION_NOTIFY(URPGAttributeSet, ManaRegeneration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URPGAttributeSet, HealthRegeneration, COND_None, REPNOTIFY_Always);
 	//
+
+	// Registers Resistance attibutes to be replicated
+	DOREPLIFETIME_CONDITION_NOTIFY(URPGAttributeSet, FireResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URPGAttributeSet, LightningResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URPGAttributeSet, ArcaneResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URPGAttributeSet, PhysicalResistance, COND_None, REPNOTIFY_Always);
 }
 
 // Should only be used for clamping values
@@ -179,7 +196,6 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 			else
 			{
-				
 				// Activate Ability if enemy has specific tag
 				FGameplayTagContainer TagContainer;
 				TagContainer.AddTag(FRPGGameplayTags::Get().Effects_HitReact);
@@ -200,7 +216,7 @@ void URPGAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Da
 	if (Props.SourceCharacter != Props.TargetCharacter)
 	{
 		// Cast to our playercontroller
-		if (ARPGPlayerController* PC = Cast<ARPGPlayerController>(UGameplayStatics::GetPlayerController(Props.SourceCharacter, 0)))
+		if (ARPGPlayerController* PC = Cast<ARPGPlayerController>(Props.SourceController))
 		{
 			// Calls ShowDamageNumber from player controller passing in the damage
 			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit,bCriticalHit);
@@ -299,7 +315,30 @@ void URPGAttributeSet::OnRep_HealthRegeneration(const FGameplayAttributeData& Ol
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URPGAttributeSet, HealthRegeneration, OldHealthRegeneration);
 }
+
 // <-
 
+/*
+* Resistance Attribute Rep Functions ->
+*/
+void URPGAttributeSet::OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URPGAttributeSet, FireResistance, OldFireResistance);
+}
 
+void URPGAttributeSet::OnRep_LightningResistance(const FGameplayAttributeData& OldLightningResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URPGAttributeSet, LightningResistance, OldLightningResistance);
+}
 
+void URPGAttributeSet::OnRep_ArcaneResistance(const FGameplayAttributeData& OldArcaneResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URPGAttributeSet, ArcaneResistance, OldArcaneResistance);
+}
+
+void URPGAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance) const
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URPGAttributeSet, PhysicalResistance, OldPhysicalResistance);
+}
+
+// <-
