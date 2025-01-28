@@ -220,6 +220,13 @@ void URPGAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Da
 		{
 			// Calls ShowDamageNumber from player controller passing in the damage
 			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit,bCriticalHit);
+			return;
+		}
+
+		if (ARPGPlayerController* PC = Cast<ARPGPlayerController>(Props.TargetController))
+		{
+			// Calls ShowDamageNumber from player controller passing in the damage
+			PC->ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
 		}
 	}
 }

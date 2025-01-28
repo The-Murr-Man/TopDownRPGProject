@@ -19,6 +19,8 @@ class AURA_API URPGDamageGameplayAbility : public URPGGameplayAbility
 	
 public:
 
+	UFUNCTION(BlueprintCallable)
+	void CauseDamage(AActor* TargetActor);
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

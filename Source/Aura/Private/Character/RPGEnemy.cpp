@@ -46,7 +46,7 @@ void ARPGEnemy::PossessedBy(AController* NewController)
 	RPGAIController->RunBehaviorTree(BehaviorTree);
 	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
 
-	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangerAttacker"), CharacterClass != ECharacterClass::Warrior);
+	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), CharacterClass != ECharacterClass::Warrior);
 	
 }
 
@@ -60,7 +60,7 @@ void ARPGEnemy::BeginPlay()
 	// Check to see if player is server for startup abilities
 	if (HasAuthority())
 	{
-		URPGAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+		URPGAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
 	}
 
 	if(URPGUserWidget* RPGUserWidget = Cast<URPGUserWidget>(HealthBar->GetUserWidgetObject()))
@@ -116,7 +116,11 @@ void ARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCoun
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0 : BaseMaxWalkSpeed;
-	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+
+	if (RPGAIController && RPGAIController->GetBlackboardComponent())
+	{
+		RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	}
 }
 
 void ARPGEnemy::HighlightActor()
@@ -132,6 +136,16 @@ void ARPGEnemy::UnHighlightActor()
 {
 	GetMesh()->SetRenderCustomDepth(false);
 	WeaponMesh->SetRenderCustomDepth(false);
+}
+
+void ARPGEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
+{
+	CombatTarget = InCombatTarget;
+}
+
+AActor* ARPGEnemy::GetCombatTarget_Implementation() const
+{
+	return CombatTarget;
 }
 
 int32 ARPGEnemy::GetPlayerLevel()

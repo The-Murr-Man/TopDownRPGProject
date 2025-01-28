@@ -19,20 +19,14 @@ public:
 
 	static void InitializeNativeGameplayTags();
 
-	/*
-	* Primary Attributes ->
-	*/
+	/*Primary Attributes ->*/
 	FGameplayTag Attributes_Primary_Strength;
 	FGameplayTag Attributes_Primary_Intellegence;
 	FGameplayTag Attributes_Primary_Resilience;
 	FGameplayTag Attributes_Primary_Vigor;
-	/*
-	* Primary Attributes End <-
-	*/
+	/*Primary Attributes End <-*/
 
-	/*
-	* Secondary Attributes ->
-	*/
+	/*Secondary Attributes ->*/
 	FGameplayTag Attributes_Secondary_MaxHealth;
 	FGameplayTag Attributes_Secondary_MaxMana;
 	FGameplayTag Attributes_Secondary_Armor;
@@ -43,26 +37,18 @@ public:
 	FGameplayTag Attributes_Secondary_CritcalHitResistance;
 	FGameplayTag Attributes_Secondary_HealthRegeneration;
 	FGameplayTag Attributes_Secondary_ManaRegeneration;
-	/*
-	* Secondary Attributes End <-
-	*/
+	/*Secondary Attributes End <-*/
 
-	/*
-	* Input Tags ->
-	*/
+	/*Input Tags ->*/
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
 	FGameplayTag InputTag_1;
 	FGameplayTag InputTag_2;
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
-	/*
-	* Input Tags End <-
-	*/
+	/*Input Tags End <-*/
 
-	/*
-	* Damage Type Tags ->
-	*/
+	/*Damage Type Tags ->*/
 	FGameplayTag Damage;
 	FGameplayTag Damage_Fire;
 	FGameplayTag Damage_Lightning;
@@ -70,31 +56,28 @@ public:
 	FGameplayTag Damage_Physical;
 
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
-	/*
-	* Damage Type Tags End <-
-	*/
+	/*Damage Type Tags End <-*/
 
-	/*
-	* Damage Resistances Tags ->
-	*/
+	/*Damage Resistances Tags ->*/
 	FGameplayTag Attributes_Resistance_Fire;
 	FGameplayTag Attributes_Resistance_Lightning;
 	FGameplayTag Attributes_Resistance_Arcane;
 	FGameplayTag Attributes_Resistance_Physical;
+	/*Damage Resistances Tags End <-*/
 
-	/*
-	* Damage Resistances Tags End <-
-	*/
-
-	/*
-	* Effect Tags ->
-	*/
-
+	/*Effect Tags ->*/
 	FGameplayTag Effects_HitReact;
+	/*Effect Tags <-*/
 
-	/*
-	* Effect Tags <-
-	*/
+	/*Ability Tags ->*/
+	FGameplayTag Abilities_Attack;
+	/*Ability Tags <-*/
+
+	/*Montage Tags ->*/
+	FGameplayTag Montage_Attack_Weapon;
+	FGameplayTag Montage_Attack_RightHand;
+	FGameplayTag Montage_Attack_LeftHand;
+	/*Montage Tags <-*/
 private:
 	static FRPGGameplayTags GameplayTags;
 };

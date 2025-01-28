@@ -6,6 +6,7 @@
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Aura/Aura.h"
+#include "RPGGameplayTags.h"
 
 // Sets default values
 ARPGCharacterBase::ARPGCharacterBase()
@@ -82,6 +83,38 @@ void ARPGCharacterBase::Dissolve()
 	StartWeaponDissolveTimeline(WeaponDynamicMatInst);
 }
 
+FVector ARPGCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag)
+{
+	const FRPGGameplayTags& GameplayTags = FRPGGameplayTags::Get();
+	// TODO: Return Correct Socket Based on Montage Tag
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon) && IsValid(WeaponMesh))
+	{
+		return WeaponMesh->GetSocketLocation(WeaponTipSocketName);
+	}
+	
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand))
+	{
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}
+
+	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
+	{
+		return GetMesh()->GetSocketLocation(RightHandSocketName);
+	}
+
+	return FVector();
+}
+
+bool ARPGCharacterBase::IsDead_Implementation() const
+{
+	return bDead;
+}
+
+AActor* ARPGCharacterBase::GetAvatar_Implementation() 
+{
+	return this;
+}
+
 void ARPGCharacterBase::InitAbilityActorInfo()
 {
 }
@@ -110,6 +143,8 @@ void ARPGCharacterBase::MulticastHandleDeath_Implementation()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	Dissolve();
+
+	bDead = true;
 }
 
 UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const
