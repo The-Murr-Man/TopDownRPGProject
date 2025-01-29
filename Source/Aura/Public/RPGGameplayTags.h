@@ -73,10 +73,17 @@ public:
 	FGameplayTag Abilities_Attack;
 	/*Ability Tags <-*/
 
+	/*Combat Socket Tags ->*/
+	FGameplayTag CombatSocket_Weapon;
+	FGameplayTag CombatSocket_RightHand;
+	FGameplayTag CombatSocket_LeftHand;
+	/*Combat Socket <-*/
+
 	/*Montage Tags ->*/
-	FGameplayTag Montage_Attack_Weapon;
-	FGameplayTag Montage_Attack_RightHand;
-	FGameplayTag Montage_Attack_LeftHand;
+	FGameplayTag Montage_Attack_1;
+	FGameplayTag Montage_Attack_2;
+	FGameplayTag Montage_Attack_3;
+	FGameplayTag Montage_Attack_4;
 	/*Montage Tags <-*/
 private:
 	static FRPGGameplayTags GameplayTags;

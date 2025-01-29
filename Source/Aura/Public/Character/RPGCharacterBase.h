@@ -14,6 +14,7 @@ class UAttributeSet;
 class UGameplayEffect;
 class UGameplayAbility;
 class UAnimMontage;
+class UNiagaraSystem;
 
 UCLASS(Abstract)
 class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -36,6 +37,9 @@ public:
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetAvatar_Implementation() override;
 	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() { return AttackMontages; };
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override {return BloodEffect;}
+	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
+
 	/** Combat Interface */
 
 
@@ -67,7 +71,7 @@ protected:
 
 	
 	// Mesh for the characters weapon
-	UPROPERTY(EditAnywhere, Category = "Combat");
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Combat");
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
 	// Weapon Socket used for projectile spawning
@@ -104,6 +108,11 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Attributes);
 	TSubclassOf<UGameplayEffect> DefaultVitalAttributes;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Combat");
+	UNiagaraSystem* BloodEffect;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Combat");
+	TObjectPtr<USoundBase> DeathSound;
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Abilities");

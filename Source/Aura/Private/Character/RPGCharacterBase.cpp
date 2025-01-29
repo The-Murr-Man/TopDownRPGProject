@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Aura/Aura.h"
 #include "RPGGameplayTags.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ARPGCharacterBase::ARPGCharacterBase()
@@ -87,17 +88,17 @@ FVector ARPGCharacterBase::GetCombatSocketLocation_Implementation(const FGamepla
 {
 	const FRPGGameplayTags& GameplayTags = FRPGGameplayTags::Get();
 	// TODO: Return Correct Socket Based on Montage Tag
-	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_Weapon) && IsValid(WeaponMesh))
+	if (MontageTag.MatchesTagExact(GameplayTags.CombatSocket_Weapon) && IsValid(WeaponMesh))
 	{
 		return WeaponMesh->GetSocketLocation(WeaponTipSocketName);
 	}
 	
-	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_LeftHand))
+	if (MontageTag.MatchesTagExact(GameplayTags.CombatSocket_LeftHand))
 	{
 		return GetMesh()->GetSocketLocation(LeftHandSocketName);
 	}
 
-	if (MontageTag.MatchesTagExact(GameplayTags.Montage_Attack_RightHand))
+	if (MontageTag.MatchesTagExact(GameplayTags.CombatSocket_RightHand))
 	{
 		return GetMesh()->GetSocketLocation(RightHandSocketName);
 	}
@@ -115,6 +116,19 @@ AActor* ARPGCharacterBase::GetAvatar_Implementation()
 	return this;
 }
 
+FTaggedMontage ARPGCharacterBase::GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag)
+{
+	for (FTaggedMontage TaggedMontage : AttackMontages)
+	{
+		if (TaggedMontage.MontageTag == MontageTag)
+		{
+			return TaggedMontage;
+		}
+	}
+
+	return FTaggedMontage();
+}
+
 void ARPGCharacterBase::InitAbilityActorInfo()
 {
 }
@@ -128,6 +142,8 @@ void ARPGCharacterBase::Die()
 
 void ARPGCharacterBase::MulticastHandleDeath_Implementation()
 {
+	UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation(), GetActorRotation());
+
 	// Simulate Physics for weapon
 	WeaponMesh->SetSimulatePhysics(true);
 	WeaponMesh->SetEnableGravity(true);
