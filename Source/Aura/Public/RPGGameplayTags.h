@@ -71,12 +71,14 @@ public:
 
 	/*Ability Tags ->*/
 	FGameplayTag Abilities_Attack;
+	FGameplayTag Abilities_Summon;
 	/*Ability Tags <-*/
 
 	/*Combat Socket Tags ->*/
 	FGameplayTag CombatSocket_Weapon;
 	FGameplayTag CombatSocket_RightHand;
 	FGameplayTag CombatSocket_LeftHand;
+	FGameplayTag CombatSocket_Tail;
 	/*Combat Socket <-*/
 
 	/*Montage Tags ->*/

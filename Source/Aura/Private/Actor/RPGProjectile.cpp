@@ -60,6 +60,7 @@ void ARPGProjectile::Destroyed()
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
 		if (LoopingSoundComponent) LoopingSoundComponent->Stop();
+		bHit = true;
 	}
 
 	Super::Destroyed();
@@ -77,6 +78,7 @@ void ARPGProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, A
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
 
 		if (LoopingSoundComponent) LoopingSoundComponent->Stop();
+		bHit = true;
 	}
 
 	if (HasAuthority())

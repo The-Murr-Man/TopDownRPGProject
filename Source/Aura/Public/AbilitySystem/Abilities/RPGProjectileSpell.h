@@ -9,7 +9,7 @@
 // Forward Declarations
 class ARPGProjectile;
 class UGameplayEffect;
-
+struct FGameplayTag;
 /**
  * 
  */
@@ -27,7 +27,7 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
 
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
-	void SpawnProjectile(const FVector& ProjectileTargetLocation);
+	void SpawnProjectile(const FVector& ProjectileTargetLocation, const FGameplayTag& SocketTag, bool bOverridePitch = false, float PitchOverride = 0);
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	TSubclassOf<ARPGProjectile> ProjectileClass;

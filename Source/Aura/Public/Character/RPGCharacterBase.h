@@ -36,10 +36,11 @@ public:
 	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetAvatar_Implementation() override;
-	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() { return AttackMontages; };
-	virtual UNiagaraSystem* GetBloodEffect_Implementation() override {return BloodEffect;}
+	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() { return AttackMontages; }
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override {return BloodEffect; }
 	virtual FTaggedMontage GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag) override;
-
+	virtual int32 GetMinionCount_Implementation() override { return MinionCount; }
+	virtual void IncrementMinionCount_Implementation(int32 Amount) override { MinionCount+= Amount; }
 	/** Combat Interface */
 
 
@@ -84,7 +85,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat");
 	FName RightHandSocketName;
 
+	UPROPERTY(EditAnywhere, Category = "Combat");
+	FName TailSocketName;
+
 	bool bDead = false;
+
+	/* Minions */
+	int32 MinionCount = 0;
 
 	// Dissolve Effects
 	UPROPERTY(BlueprintReadOnly, EditAnywhere);
@@ -113,6 +120,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Combat");
 	TObjectPtr<USoundBase> DeathSound;
+
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Abilities");

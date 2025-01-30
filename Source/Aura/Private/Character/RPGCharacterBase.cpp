@@ -103,6 +103,11 @@ FVector ARPGCharacterBase::GetCombatSocketLocation_Implementation(const FGamepla
 		return GetMesh()->GetSocketLocation(RightHandSocketName);
 	}
 
+	if (MontageTag.MatchesTagExact(GameplayTags.CombatSocket_Tail))
+	{
+		return GetMesh()->GetSocketLocation(TailSocketName);
+	}
+
 	return FVector();
 }
 
