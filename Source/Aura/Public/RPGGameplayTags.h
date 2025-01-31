@@ -72,7 +72,12 @@ public:
 	/*Ability Tags ->*/
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
+	FGameplayTag Abilities_Fire_Firebolt;
 	/*Ability Tags <-*/
+
+	/*Cooldown Tags ->*/
+	FGameplayTag Cooldoawn_Fire_Firebolt;
+	/*Cooldown Tags <-*/
 
 	/*Combat Socket Tags ->*/
 	FGameplayTag CombatSocket_Weapon;
