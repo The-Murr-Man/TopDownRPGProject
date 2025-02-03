@@ -36,7 +36,6 @@ struct FUIWidgetRow : public FTableRowBase
 
 // Delagates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSigniture, FUIWidgetRow, Row);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSigniture, const FRPGAbilityInfo&, Info);
 //
@@ -55,8 +54,6 @@ public:
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
 
-	
-
 	// Health
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnAttributeChangedSignature OnHealthChanged;
@@ -70,6 +67,10 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnAttributeChangedSignature OnMaxManaChanged;
+
+	// XP
+	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
+	FOnAttributeChangedSignature OnXPPercentChangedDelegate;
 
 	//
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
@@ -90,6 +91,8 @@ protected:
 	void BindAttributeChange(FGameplayAttribute Attribute, FOnAttributeChangedSignature& AttributeData);
 
 	void OnInitializeStartupAbilities(URPGAbilitySystemComponent* RPGAbilitySystemComponent);
+
+	void OnXPChanged(int32 NewXP);
 };
 
 template<typename T>

@@ -39,6 +39,10 @@ public:
 	FGameplayTag Attributes_Secondary_ManaRegeneration;
 	/*Secondary Attributes End <-*/
 
+	/*Meta Attributes ->*/
+	FGameplayTag Attributes_Meta_IncomingXP;
+	/*Meta Attributes End <-*/
+
 	/*Input Tags ->*/
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;

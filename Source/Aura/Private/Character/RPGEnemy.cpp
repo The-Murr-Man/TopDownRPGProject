@@ -148,7 +148,7 @@ AActor* ARPGEnemy::GetCombatTarget_Implementation() const
 	return CombatTarget;
 }
 
-int32 ARPGEnemy::GetPlayerLevel()
+int32 ARPGEnemy::GetPlayerLevel_Implementation()
 {
 	return Level;
 }

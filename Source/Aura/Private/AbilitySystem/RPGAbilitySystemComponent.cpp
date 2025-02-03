@@ -36,6 +36,16 @@ void URPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
 	AbilitiesGivenDelegate.Broadcast(this);
 }
 
+void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupPassiveAbilities)
+{
+	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupPassiveAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
+
+		GiveAbilityAndActivateOnce(AbilitySpec);
+	}
+}
+
 /// <summary>
 /// 
 /// </summary>

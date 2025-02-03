@@ -5,6 +5,8 @@
 #include "AbilitySystem/RPGAttributeSet.h"
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "Player/RPGPlayerState.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
 
 /// <summary>
 /// 
@@ -26,8 +28,13 @@ void UOverlayWidgetController::BroadcastInitialValues()
 /// </summary>
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
-	const URPGAttributeSet* RPGAttributeSet = CastChecked<URPGAttributeSet>(AttributeSet);
+	ARPGPlayerState* RPGPlayerState = CastChecked<ARPGPlayerState>(PlayerState);
 
+	// Callback for changing xp
+	RPGPlayerState->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXPChanged);
+
+	const URPGAttributeSet* RPGAttributeSet = CastChecked<URPGAttributeSet>(AttributeSet);
+	
 	BindAttributeChange(RPGAttributeSet->GetHealthAttribute(), OnHealthChanged);
 	BindAttributeChange(RPGAttributeSet->GetMaxHealthAttribute(), OnMaxHealthChanged);
 	BindAttributeChange(RPGAttributeSet->GetManaAttribute(), OnManaChanged);
@@ -89,4 +96,33 @@ void UOverlayWidgetController::OnInitializeStartupAbilities(URPGAbilitySystemCom
 	});
 
 	RPGAbilitySystemComponent->ForEachAbility(BroadcastDelegate);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="NewXP"></param>
+void UOverlayWidgetController::OnXPChanged(int32 NewXP)
+{
+	ARPGPlayerState* RPGPlayerState = CastChecked<ARPGPlayerState>(PlayerState);
+
+	ULevelUpInfo* LevelUpInfo = RPGPlayerState->LevelUpInfo;
+
+	checkf(LevelUpInfo, TEXT("Unable to find LevelUpInfo, Please fill our RPGPlayerState Blueprint"));
+
+	int32 Level = LevelUpInfo->FindLevelForXP(NewXP);
+	int32 MaxLevel = LevelUpInfo->LevelUpInformation.Num();
+
+	if (Level <= MaxLevel && Level > 0)
+	{
+		int32 LevelUpRequirment = LevelUpInfo->LevelUpInformation[Level].LevelUpRequirment;
+		int32 PreviousLevelUpRequirment = LevelUpInfo->LevelUpInformation[Level - 1].LevelUpRequirment;
+
+		int32 DeltaLevelUpRequirment = LevelUpRequirment - PreviousLevelUpRequirment;
+		int32 XPForThisLevel = NewXP - PreviousLevelUpRequirment;
+
+		float XPBarPercent = static_cast<float>(XPForThisLevel) / static_cast<float>(DeltaLevelUpRequirment);
+
+		OnXPPercentChangedDelegate.Broadcast(XPBarPercent);
+	}
 }

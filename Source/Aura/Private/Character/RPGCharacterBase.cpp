@@ -42,7 +42,6 @@ void ARPGCharacterBase::InitializeDefaultAttributes()
 	ApplyEffectToSelf(DefaultPrimaryAttributes, 1);
 	ApplyEffectToSelf(DefaultSecondaryAttributes, 1);
 	ApplyEffectToSelf(DefaultVitalAttributes, 1);
-	//ApplyEffectToSelf(DefaultResistanceAttributes, 1);
 }
 
 void ARPGCharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level)
@@ -65,6 +64,7 @@ void ARPGCharacterBase::AddCharacterAbilities()
 	if (!HasAuthority()) return;
 
 	RPGASC->AddCharacterAbilities(StartupAbilities);
+	RPGASC->AddCharacterPassiveAbilities(StartupPassiveAbilities);
 }
 
 void ARPGCharacterBase::Dissolve()

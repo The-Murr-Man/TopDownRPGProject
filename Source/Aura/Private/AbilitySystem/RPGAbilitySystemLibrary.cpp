@@ -150,9 +150,9 @@ void URPGAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextO
 
 	for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultInfo.StartupAbilities)
 	{
-		if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor()))
+		if (ASC->GetAvatarActor()->Implements<UCombatInterface>())
 		{
-			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, CombatInterface->GetPlayerLevel());
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, ICombatInterface::Execute_GetPlayerLevel(ASC->GetAvatarActor()));
 
 			ASC->GiveAbility(AbilitySpec);
 		}
@@ -269,4 +269,17 @@ bool URPGAbilitySystemLibrary::IsNotFriend(AActor* FirstActor, AActor* SecondAct
 	const bool bFriends = bBothArePlayers || bBothAreEnemies;
 
 	return !bFriends;
+}
+
+int32 URPGAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass, int32 CharacterLevel)
+{
+	// Assign CharacterClassInfo from the GameMode
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!CharacterClassInfo) return 0;
+	
+	const FCharacterClassDefaultInfo& Info = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
+
+	float XPReward =  Info.XPReward.GetValueAtLevel(CharacterLevel);
+
+	return static_cast<int32>(XPReward);
 }
