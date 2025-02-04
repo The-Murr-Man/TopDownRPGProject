@@ -8,10 +8,26 @@
 #include "Player/RPGPlayerController.h"
 #include "UI/HUD/RPGHUD.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
-
+#include "NiagaraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 ARPGCharacter::ARPGCharacter()
 {
+	LevelUpNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("LevelUpNiagaraComponent");
+	LevelUpNiagaraComponent->SetupAttachment(GetRootComponent());
+	LevelUpNiagaraComponent->bAutoActivate = false;
+
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>("CameraBoom");
+	CameraBoom->SetupAttachment(GetRootComponent());
+	CameraBoom->SetUsingAbsoluteRotation(true);
+	CameraBoom->bDoCollisionTest = false;
+	CameraBoom->TargetArmLength = 800;
+	
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	CameraComponent->bUsePawnControlRotation = false;
+
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0, 400, 0);
 	GetCharacterMovement()->bConstrainToPlane = true;
@@ -67,17 +83,36 @@ void ARPGCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
 
 void ARPGCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints)
 {
-	//TODO:
+	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
+	check(RpgPlayerState);
+
+	RpgPlayerState->AddToAttributePoints(InAttributePoints);
 }
 
 void ARPGCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints)
 {
-	//TODO:
+	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
+	check(RpgPlayerState);
+
+	RpgPlayerState->AddToSpellPoints(InSpellPoints);
 }
 
 void ARPGCharacter::LevelUp_Implementation()
 {
+	MulticastLevelUpParticles();
+}
 
+void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
+{
+	if (!IsValid(LevelUpNiagaraComponent)) return;
+
+	const FVector CameraLocation = CameraComponent->GetComponentLocation();
+	const FVector NiagaraSystemLocation = LevelUpNiagaraComponent->GetComponentLocation();
+
+	const FRotator ToCameraRotation = (CameraLocation - NiagaraSystemLocation).Rotation();
+
+	LevelUpNiagaraComponent->SetWorldRotation(ToCameraRotation);
+	LevelUpNiagaraComponent->Activate(true);
 }
 
 int32 ARPGCharacter::GetXP_Implementation() const
@@ -85,6 +120,20 @@ int32 ARPGCharacter::GetXP_Implementation() const
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
 	check(RpgPlayerState);
 	return RpgPlayerState->GetPlayerXP();;
+}
+
+int32 ARPGCharacter::GetAttributePoints_Implementation() const
+{
+	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
+	check(RpgPlayerState);
+	return RpgPlayerState->GetPlayerAttributePoints();
+}
+
+int32 ARPGCharacter::GetSpellPoints_Implementation() const
+{
+	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
+	check(RpgPlayerState);
+	return RpgPlayerState->GetPlayerSpellPoints();
 }
 
 /// <summary>
@@ -150,4 +199,8 @@ void ARPGCharacter::InitAbilityActorInfo()
 
 	InitializeDefaultAttributes();
 }
+
+
+
+
 

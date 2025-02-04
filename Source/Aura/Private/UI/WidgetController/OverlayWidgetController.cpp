@@ -33,6 +33,13 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 	// Callback for changing xp
 	RPGPlayerState->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXPChanged);
 
+	RPGPlayerState->OnLevelChangedDelegate.AddLambda(
+		[this](int32 NewLevel)
+		{
+			OnPlayerLevelChangedDelegate.Broadcast(NewLevel);
+		}
+	);
+
 	const URPGAttributeSet* RPGAttributeSet = CastChecked<URPGAttributeSet>(AttributeSet);
 	
 	BindAttributeChange(RPGAttributeSet->GetHealthAttribute(), OnHealthChanged);

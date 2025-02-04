@@ -271,6 +271,30 @@ bool URPGAbilitySystemLibrary::IsNotFriend(AActor* FirstActor, AActor* SecondAct
 	return !bFriends;
 }
 
+/// <summary>
+/// Returns the magnitude tags for SetByCaller Magitude for gameplay effects
+/// </summary>
+/// <param name="GameplayEffec"></param>
+/// <returns></returns>
+TArray<FGameplayTag> URPGAbilitySystemLibrary::CallerMagnitudeTags(TSubclassOf<UGameplayEffect> GameplayEffect)
+{
+	UGameplayEffect* GE = NewObject<UGameplayEffect>(GetTransientPackage(), GameplayEffect);
+
+	TArray<FGameplayModifierInfo> ModifierInfo = GE->Modifiers;
+
+	TArray<FGameplayTag> CallerTags;
+
+	for (FGameplayModifierInfo Info : ModifierInfo)
+	{
+		if (Info.ModifierMagnitude.GetMagnitudeCalculationType() == EGameplayEffectMagnitudeCalculation::SetByCaller)
+		{
+			CallerTags.Add(Info.ModifierMagnitude.GetSetByCallerFloat().DataTag);
+		}
+	}
+
+	return CallerTags;
+}
+
 int32 URPGAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass, int32 CharacterLevel)
 {
 	// Assign CharacterClassInfo from the GameMode

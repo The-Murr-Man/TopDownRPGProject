@@ -251,14 +251,38 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 				IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
 				IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
 
-				SetHealth(GetMaxHealth());
-				SetMana(GetMaxMana());
+				// Refills Health and Mana Globes on level up
+				BTopOffHealth = true;
+				BTopOffMana = true;
 
 				IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
 			}
 
 			IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
 		}
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Attribute"></param>
+/// <param name="OldValue"></param>
+/// <param name="NewValue"></param>
+void URPGAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+
+	if (Attribute == GetMaxHealthAttribute() && BTopOffHealth)
+	{
+		SetHealth(GetMaxHealth());
+		BTopOffHealth = false;
+	}
+
+	if (Attribute == GetMaxManaAttribute() && BTopOffMana)
+	{
+		SetMana(GetMaxMana());
+		BTopOffMana = false;
 	}
 }
 
