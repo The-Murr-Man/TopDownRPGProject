@@ -217,7 +217,7 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 			{
 				// Activate Ability if enemy has specific tag
 				FGameplayTagContainer TagContainer;
-				TagContainer.AddTag(FRPGGameplayTags::Get().Effects_HitReact);
+				TagContainer.AddTag(FRPGGameplayTags::Get().Abilities_HitReact);
 				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
 			}
 

@@ -17,20 +17,41 @@
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
-UOverlayWidgetController* URPGAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
+bool URPGAbilitySystemLibrary::MakeWidgetControllerParams(const UObject* WorldContextObject, FWidgetControllerParams& OutWCParams, ARPGHUD*& OutRPGHUD)
 {
 	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
 	{
-		if (ARPGHUD* RPGHUD = Cast<ARPGHUD>(PC->GetHUD()))
+		OutRPGHUD = Cast<ARPGHUD>(PC->GetHUD());
+		if (OutRPGHUD)
 		{
 			ARPGPlayerState* PS = PC->GetPlayerState<ARPGPlayerState>();
 			UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
 			UAttributeSet* AS = PS->GetAttributeSet();
 
-			const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
-
-			return RPGHUD->GetOverlayWidgetController(WidgetControllerParams);
+			OutWCParams.AttributeSet = AS;
+			OutWCParams.PlayerController = PC;
+			OutWCParams.AbilitySystemComponent = ASC;
+			OutWCParams.PlayerState = PS;
+			
+			return true;
 		}
+	}
+	return false;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <returns></returns>
+UOverlayWidgetController* URPGAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
+{
+	FWidgetControllerParams WCParams;
+	ARPGHUD* RPGHUD = nullptr;
+
+	if (MakeWidgetControllerParams(WorldContextObject, WCParams, RPGHUD))
+	{
+		return RPGHUD->GetOverlayWidgetController(WCParams);
 	}
 
 	return nullptr;
@@ -43,20 +64,31 @@ UOverlayWidgetController* URPGAbilitySystemLibrary::GetOverlayWidgetController(c
 /// <returns></returns>
 UAttributeMenuWidgetController* URPGAbilitySystemLibrary::GetAttributeMenuWidgetController(const UObject* WorldContextObject)
 {
-	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	FWidgetControllerParams WCParams;
+	ARPGHUD* RPGHUD = nullptr;
+
+	if (MakeWidgetControllerParams(WorldContextObject, WCParams, RPGHUD))
 	{
-		if (ARPGHUD* RPGHUD = Cast<ARPGHUD>(PC->GetHUD()))
-		{
-			ARPGPlayerState* PS = PC->GetPlayerState<ARPGPlayerState>();
-			UAbilitySystemComponent* ASC = PS->GetAbilitySystemComponent();
-			UAttributeSet* AS = PS->GetAttributeSet();
-
-			const FWidgetControllerParams WidgetControllerParams(PC, PS, ASC, AS);
-
-			return RPGHUD->GetAttributeMenuWidgetController(WidgetControllerParams);
-		}
+		return RPGHUD->GetAttributeMenuWidgetController(WCParams);
 	}
 
+	return nullptr;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <returns></returns>
+USpellMenuWidgetController* URPGAbilitySystemLibrary::GetSpellMenuWidgetController(const UObject* WorldContextObject)
+{
+	FWidgetControllerParams WCParams;
+	ARPGHUD* RPGHUD = nullptr;
+
+	if (MakeWidgetControllerParams(WorldContextObject, WCParams, RPGHUD))
+	{
+		return RPGHUD->GetSpellMenuWidgetController(WCParams);
+	}
 	return nullptr;
 }
 
@@ -172,6 +204,14 @@ UCharacterClassInfo* URPGAbilitySystemLibrary::GetCharacterClassInfo(const UObje
 	return RPGGameMode->CharacterClassInfo;
 }
 
+UAbilityInfo* URPGAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContextObject)
+{
+	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!RPGGameMode) return nullptr;
+
+	return RPGGameMode->AbilityInfo;
+}
+
 /// <summary>
 /// 
 /// </summary>
@@ -258,6 +298,12 @@ void URPGAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* WorldCo
 	}
 }
 
+/// <summary>
+/// Returns whether or not an actor is a friend
+/// </summary>
+/// <param name="FirstActor"></param>
+/// <param name="SecondActor"></param>
+/// <returns></returns>
 bool URPGAbilitySystemLibrary::IsNotFriend(AActor* FirstActor, AActor* SecondActor)
 {
 	// Both Actors have player tag
@@ -295,6 +341,13 @@ TArray<FGameplayTag> URPGAbilitySystemLibrary::CallerMagnitudeTags(TSubclassOf<U
 	return CallerTags;
 }
 
+/// <summary>
+/// Returns the amount of XP to be rewarded for killing an enemy based on class and level
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <param name="CharacterClass"></param>
+/// <param name="CharacterLevel"></param>
+/// <returns></returns>
 int32 URPGAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass, int32 CharacterLevel)
 {
 	// Assign CharacterClassInfo from the GameMode

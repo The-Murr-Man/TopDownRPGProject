@@ -7,6 +7,8 @@
 #include "RPGLogChannels.h"
 #include "Interaction/PlayerInterface.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/RPGAbilitySystemLibrary.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 
 /// <summary>
 /// 
@@ -29,15 +31,20 @@ void URPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
 		if (const URPGGameplayAbility* RPGAbility = Cast<URPGGameplayAbility>(AbilitySpec.Ability))
 		{
 			AbilitySpec.DynamicAbilityTags.AddTag(RPGAbility->StartupInputTag);
+			AbilitySpec.DynamicAbilityTags.AddTag(FRPGGameplayTags::Get().Abilities_Status_Equipped);
 			GiveAbility(AbilitySpec);
 		}
 	}
 
 	bStartupAbilitiesGiven = true;
 	//
-	AbilitiesGivenDelegate.Broadcast(this);
+	AbilitiesGivenDelegate.Broadcast();
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="StartupPassiveAbilities"></param>
 void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupPassiveAbilities)
 {
 	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupPassiveAbilities)
@@ -112,17 +119,52 @@ void URPGAbilitySystemComponent::ForEachAbility(const FForEachAbility Delegate)
 /// <summary>
 /// 
 /// </summary>
+/// <param name="Level"></param>
+void URPGAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
+{
+	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+
+	for (const FRPGAbilityInfo& Info : AbilityInfo->AbilityInformation)
+	{
+		// Continue if Ability Tag isnt valid
+		if (!Info.AbilityTag.IsValid()) continue;
+
+		// Continue if Ability Level is less than Level Requirment
+		if (Level < Info.LevelRequirement) continue;
+
+		// Ability Doesnt exist in our Activatable Abilities
+		if (GetSpecFromAbilityTag(Info.AbilityTag) == nullptr)
+		{
+			// Create Ability spec for new ability at level 1(Will load later)
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Info.Ability, 1);
+
+			// Changing status of ability to eligible since we meets its level requirement
+			AbilitySpec.DynamicAbilityTags.AddTag(FRPGGameplayTags::Get().Abilities_Status_Eligible);
+
+			GiveAbility(AbilitySpec);
+
+			// Forces ability spec to replicate Now
+			MarkAbilitySpecDirty(AbilitySpec);
+
+			ClientUpdateAbilityStatus(Info.AbilityTag, FRPGGameplayTags::Get().Abilities_Status_Eligible);
+		}
+	}
+}
+
+/// <summary>
+/// Returns the Ability tag from a Ability Spec
+/// </summary>
 /// <param name="AbilitySpec"></param>
 /// <returns></returns>
 FGameplayTag URPGAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
 {
 	if (AbilitySpec.Ability)
 	{
-		for (FGameplayTag Tag : AbilitySpec.Ability->AbilityTags)
+		for (FGameplayTag AbilityTag : AbilitySpec.Ability->AbilityTags)
 		{
-			if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
+			if (AbilityTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
 			{
-				return Tag;
+				return AbilityTag;
 			}
 		}
 	}
@@ -131,23 +173,66 @@ FGameplayTag URPGAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAb
 }
 
 /// <summary>
-/// 
+/// Returns the Input tag from a Ability Spec
 /// </summary>
 /// <param name="AbilitySpec"></param>
 /// <returns></returns>
 FGameplayTag URPGAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
 {
-	for (FGameplayTag Tag : AbilitySpec.DynamicAbilityTags)
+	for (FGameplayTag InputTag : AbilitySpec.DynamicAbilityTags)
 	{
-		if (Tag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		if (InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
 		{
-			return Tag;
+			return InputTag;
 		}
 	}
 
 	return FGameplayTag();
 }
 
+/// <summary>
+/// Returns the Status tag from a Ability Spec
+/// </summary>
+/// <param name="AbilitySpec"></param>
+/// <returns></returns>
+FGameplayTag URPGAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag StatusTag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (StatusTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities.Status"))))
+		{
+			return StatusTag;
+		}
+	}
+	return FGameplayTag();
+}
+
+/// <summary>
+/// Returns the Ability spec from a specified Ability Tag
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <returns></returns>
+FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		for (FGameplayTag Tag : AbilitySpec.Ability->AbilityTags)
+		{
+			if (Tag.MatchesTagExact(AbilityTag))
+			{
+				return &AbilitySpec;
+			}
+		}
+	}
+	return nullptr;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="AttributeTag"></param>
 void URPGAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
 {
 	if (GetAvatarActor()->Implements<UPlayerInterface>())
@@ -187,8 +272,18 @@ void URPGAbilitySystemComponent::OnRep_ActivateAbilities()
 	if (!bStartupAbilitiesGiven)
 	{
 		bStartupAbilitiesGiven = true;
-		AbilitiesGivenDelegate.Broadcast(this);
+		AbilitiesGivenDelegate.Broadcast();
 	}
+}
+
+/// <summary>
+/// Client RPC For Broadcasting the AbilityStatusChangedDelegate
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <param name="StatusTag"></param>
+void URPGAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag)
+{
+	AbilityStatusChangedDelegate.Broadcast(AbilityTag, StatusTag);
 }
 
 /// <summary>

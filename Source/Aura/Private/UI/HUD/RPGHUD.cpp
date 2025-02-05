@@ -5,7 +5,13 @@
 #include"UI/Widget/RPGUserWidget.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
 #include "UI/WidgetController/AttributeMenuWidgetController.h"
+#include "UI/WidgetController/SpellMenuWidgetController.h"
 
+/// <summary>
+/// TODO:
+/// </summary>
+/// <param name="WCParams"></param>
+/// <returns></returns>
 UOverlayWidgetController* ARPGHUD::GetOverlayWidgetController(const FWidgetControllerParams& WCParams)
 {
 	// If the controller is not yet made then make it
@@ -20,6 +26,11 @@ UOverlayWidgetController* ARPGHUD::GetOverlayWidgetController(const FWidgetContr
 	return OverlayWidgetController;
 }
 
+/// <summary>
+/// TODO:
+/// </summary>
+/// <param name="WCParams"></param>
+/// <returns></returns>
 UAttributeMenuWidgetController* ARPGHUD::GetAttributeMenuWidgetController(const FWidgetControllerParams& WCParams)
 {
 	// If the controller is not yet made then make it
@@ -34,6 +45,32 @@ UAttributeMenuWidgetController* ARPGHUD::GetAttributeMenuWidgetController(const 
 	return AttributeMenuWidgetController;
 }
 
+/// <summary>
+/// TODO:
+/// </summary>
+/// <param name="WCParams"></param>
+/// <returns></returns>
+USpellMenuWidgetController* ARPGHUD::GetSpellMenuWidgetController(const FWidgetControllerParams& WCParams)
+{
+	// If the controller is not yet made then make it
+	if (SpellMenuWidgetController == nullptr)
+	{
+		SpellMenuWidgetController = NewObject<USpellMenuWidgetController>(this, SpellMenuWidgetControllerClass);
+		SpellMenuWidgetController->SetWidgetControllerParams(WCParams);
+		SpellMenuWidgetController->BindCallbacksToDependencies();
+	}
+
+	// Controller already exists so return it
+	return SpellMenuWidgetController;
+}
+
+/// <summary>
+/// TODO:
+/// </summary>
+/// <param name="PC"></param>
+/// <param name="PS"></param>
+/// <param name="ASC"></param>
+/// <param name="AS"></param>
 void ARPGHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySystemComponent* ASC, UAttributeSet* AS)
 {
 	checkf(OverlayWidgetClass, TEXT("Overlay Widget Class uninitialized, please fill out BP_RPGHUD"));

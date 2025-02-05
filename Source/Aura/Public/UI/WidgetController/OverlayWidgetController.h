@@ -38,14 +38,13 @@ struct FUIWidgetRow : public FTableRowBase
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSigniture, FUIWidgetRow, Row);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSigniture, const FRPGAbilityInfo&, Info);
 //
 
 
 /**
  * 
  */
-UCLASS(BlueprintType, Blueprintable)
+UCLASS()
 class AURA_API UOverlayWidgetController : public URPGWidgetController
 {
 	GENERATED_BODY()
@@ -81,21 +80,15 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
 	FMessageWidgetRowSigniture MessegeWidgetRowDelegate;
 
-	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
-	FAbilityInfoSigniture AbilityInfoDelegate;
+	
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
 	TObjectPtr<UDataTable> MessageWidgetDataTable;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
-	TObjectPtr<UAbilityInfo> AbilityInfo;
-
 	template<typename T>
 	T* GetDataTableRowByTag(UDataTable* DataTable, const FGameplayTag& Tag);
 	void BindAttributeChange(FGameplayAttribute Attribute, FOnAttributeChangedSignature& AttributeData);
-
-	void OnInitializeStartupAbilities(URPGAbilitySystemComponent* RPGAbilitySystemComponent);
 
 	void OnXPChanged(int32 NewXP);
 };

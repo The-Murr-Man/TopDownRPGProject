@@ -9,8 +9,14 @@
 // Forward Delcarations
 class UAttributeSet;
 class UAbilitySystemComponent;
+class ARPGPlayerController;
+class ARPGPlayerState;
+class URPGAbilitySystemComponent;
+class URPGAttributeSet;
+class UAbilityInfo;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChangedSignature, int32, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSigniture, const FRPGAbilityInfo&, Info);
 
 /// <summary>
 /// Struct for controller parameters
@@ -44,12 +50,28 @@ struct FWidgetControllerParams
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class AURA_API URPGWidgetController : public UObject
 {
 	GENERATED_BODY()
-	
+
+public:
+
+	UFUNCTION(BlueprintCallable)
+	void SetWidgetControllerParams(const FWidgetControllerParams& WCParams);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void BroadcastInitialValues();
+	virtual void BindCallbacksToDependencies();
+	void BroadcastAbilityInfo();
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Messages")
+	FAbilityInfoSigniture AbilityInfoDelegate;
+
 protected:
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Widget Data")
+	TObjectPtr<UAbilityInfo> AbilityInfo;
 
 	// Variables needed to broadcast data to user widget
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
@@ -64,12 +86,22 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
 	TObjectPtr<UAttributeSet> AttributeSet;
 
-public:
+	//RPG Variables
+	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
+	TObjectPtr<ARPGPlayerController> RPGPlayerController;
 
-	UFUNCTION(BlueprintCallable)
-	void SetWidgetControllerParams(const FWidgetControllerParams& WCParams);
+	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
+	TObjectPtr<ARPGPlayerState> RPGPlayerState;
 
-	UFUNCTION(BlueprintCallable)
-	virtual void BroadcastInitialValues();
-	virtual void BindCallbacksToDependencies();
+	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
+	TObjectPtr<URPGAbilitySystemComponent> RPGAbilitySystemComponent;
+
+	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")
+	TObjectPtr<URPGAttributeSet> RPGAttributeSet;
+
+	// Casted Getters 
+	ARPGPlayerController* GetRPGPC();
+	ARPGPlayerState* GetRPGPS();
+	URPGAbilitySystemComponent* GetRPGASC();
+	URPGAttributeSet* GetRPGAS();
 };

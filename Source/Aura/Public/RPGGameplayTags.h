@@ -50,6 +50,9 @@ public:
 	FGameplayTag InputTag_2;
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
+
+	FGameplayTag InputTag_Passive_1;
+	FGameplayTag InputTag_Passive_2;
 	/*Input Tags End <-*/
 
 	/*Damage Type Tags ->*/
@@ -77,7 +80,22 @@ public:
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
 	FGameplayTag Abilities_Fire_Firebolt;
+	FGameplayTag Abilities_Lightning_Electrocute;
+	FGameplayTag Abilities_HitReact;
 	/*Ability Tags <-*/
+
+	/*Ability Status Tags ->*/
+	FGameplayTag Abilities_Status_Locked;
+	FGameplayTag Abilities_Status_Eligible;
+	FGameplayTag Abilities_Status_Unlocked;
+	FGameplayTag Abilities_Status_Equipped;
+	/*Ability Status Tags End <-*/
+
+	/*Ability Type Tags ->*/
+	FGameplayTag Abilities_Type_Offensive;
+	FGameplayTag Abilities_Type_Passive;
+	FGameplayTag Abilities_Type_None;
+	/*Ability Type Tags End <-*/
 
 	/*Cooldown Tags ->*/
 	FGameplayTag Cooldoawn_Fire_Firebolt;
