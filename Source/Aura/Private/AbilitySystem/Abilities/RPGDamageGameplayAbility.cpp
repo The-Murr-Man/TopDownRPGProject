@@ -6,6 +6,10 @@
 #include "AbilitySystemComponent.h"
 #include "Interaction/CombatInterface.h"
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="TargetActor"></param>
 void URPGDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 {
 	FGameplayEffectSpecHandle DamageSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass, 1);
@@ -20,6 +24,11 @@ void URPGDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(*DamageSpecHandle.Data.Get(), UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor));
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="TaggedMontages"></param>
+/// <returns></returns>
 FTaggedMontage URPGDamageGameplayAbility::GetRandomTaggedMontageFromArray(const TArray<FTaggedMontage>& TaggedMontages)
 {
 	if (!TaggedMontages.IsEmpty())
@@ -29,4 +38,17 @@ FTaggedMontage URPGDamageGameplayAbility::GetRandomTaggedMontageFromArray(const 
 	}
 
 	return FTaggedMontage();
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InLevel"></param>
+/// <param name="DamageType"></param>
+/// <returns></returns>
+float URPGDamageGameplayAbility::GetDamageByDamageType(float InLevel, const FGameplayTag& DamageType)
+{
+	checkf(DamageTypes.Contains(DamageType), TEXT("Gameplay Ability [%s] Does not Contain DamageType [%s] "), *GetNameSafe(this), *DamageType.ToString());
+
+	return DamageTypes[DamageType].GetValueAtLevel(InLevel);
 }

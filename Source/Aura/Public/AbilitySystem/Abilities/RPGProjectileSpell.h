@@ -18,9 +18,6 @@ class AURA_API URPGProjectileSpell : public URPGDamageGameplayAbility
 {
 	GENERATED_BODY()
 	
-public:
-
-
 protected:
 
 	// Overiding ActivateAbility() from GameplayAbility.h
@@ -32,5 +29,6 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	TSubclassOf<ARPGProjectile> ProjectileClass;
 
-	
+	UPROPERTY(EditDefaultsOnly)
+	int32 NumProjectiles = 5;
 };

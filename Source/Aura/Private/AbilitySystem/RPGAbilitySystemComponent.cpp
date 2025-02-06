@@ -111,7 +111,7 @@ void URPGAbilitySystemComponent::ForEachAbility(const FForEachAbility Delegate)
 	{
 		if (!Delegate.ExecuteIfBound(AbilitySpec))
 		{
-			UE_LOG(LogRPG,Error, TEXT("Failed to execute delegat in %hs"), __FUNCTION__) // %hs logs the name of a function
+			UE_LOG(LogRPG,Error, TEXT("Failed to execute delegate in %hs"), __FUNCTION__) // %hs logs the name of a function
 		}
 	}
 }
@@ -146,7 +146,7 @@ void URPGAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
 			// Forces ability spec to replicate Now
 			MarkAbilitySpecDirty(AbilitySpec);
 
-			ClientUpdateAbilityStatus(Info.AbilityTag, FRPGGameplayTags::Get().Abilities_Status_Eligible);
+			ClientUpdateAbilityStatus(Info.AbilityTag, FRPGGameplayTags::Get().Abilities_Status_Eligible, 1);
 		}
 	}
 }
@@ -229,6 +229,25 @@ FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromAbilityTag(const FG
 	return nullptr;
 }
 
+bool URPGAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription)
+{
+	if (const FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		if (URPGGameplayAbility* RPGAbility = Cast<URPGGameplayAbility>(AbilitySpec->Ability))
+		{
+			OutDescription = RPGAbility->GetDescription(AbilitySpec->Level);
+			OutNextLevelDescription = RPGAbility->GetNextLevelDescription(AbilitySpec->Level + 1);
+			return true;
+		}
+	}
+
+	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+	OutDescription = URPGGameplayAbility::GetLockedDescription(AbilityInfo->FindAbilityInfoForTag(AbilityTag).LevelRequirement);
+	OutNextLevelDescription = FString();
+
+	return false;
+}
+
 /// <summary>
 /// 
 /// </summary>
@@ -241,6 +260,40 @@ void URPGAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeT
 		{
 			ServerUpgradeAttribute(AttributeTag);
 		}
+	}
+}
+
+void URPGAbilitySystemComponent::ServerSpendSpellPoint_Implementation(const FGameplayTag& AbilityTag)
+{
+	if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		// Decrement Spell Point
+		if (GetAvatarActor()->Implements<UPlayerInterface>())
+		{
+			IPlayerInterface::Execute_AddToSpellPoints(GetAvatarActor(), -1);
+		}
+
+		FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
+		FGameplayTag Status = GetStatusFromSpec(*AbilitySpec);
+
+		if (Status.MatchesTagExact(GameplayTags.Abilities_Status_Eligible))
+		{
+			// Removes the Eligible Tag
+			AbilitySpec->DynamicAbilityTags.RemoveTag(GameplayTags.Abilities_Status_Eligible);
+
+			// Add the Unlocked Tag
+			AbilitySpec->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Unlocked);
+
+			Status = GameplayTags.Abilities_Status_Unlocked;
+		}
+
+		else if (Status.MatchesTagExact(GameplayTags.Abilities_Status_Equipped) || Status.MatchesTagExact(GameplayTags.Abilities_Status_Unlocked))
+		{
+			AbilitySpec->Level++;
+		}
+
+		ClientUpdateAbilityStatus(AbilityTag, Status, AbilitySpec->Level);
+		MarkAbilitySpecDirty(*AbilitySpec);
 	}
 }
 
@@ -281,9 +334,9 @@ void URPGAbilitySystemComponent::OnRep_ActivateAbilities()
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <param name="StatusTag"></param>
-void URPGAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag)
+void URPGAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 AbilityLevel)
 {
-	AbilityStatusChangedDelegate.Broadcast(AbilityTag, StatusTag);
+	AbilityStatusChangedDelegate.Broadcast(AbilityTag, StatusTag, AbilityLevel);
 }
 
 /// <summary>

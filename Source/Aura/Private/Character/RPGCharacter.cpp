@@ -12,6 +12,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
+/// <summary>
+/// 
+/// </summary>
 ARPGCharacter::ARPGCharacter()
 {
 	LevelUpNiagaraComponent = CreateDefaultSubobject<UNiagaraComponent>("LevelUpNiagaraComponent");
@@ -40,6 +43,10 @@ ARPGCharacter::ARPGCharacter()
 	CharacterClass = ECharacterClass::Elementalist;
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="NewController"></param>
 void ARPGCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -49,6 +56,9 @@ void ARPGCharacter::PossessedBy(AController* NewController)
 	AddCharacterAbilities();
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
@@ -57,6 +67,10 @@ void ARPGCharacter::OnRep_PlayerState()
 	InitAbilityActorInfo();
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
 int32 ARPGCharacter::GetPlayerLevel_Implementation()
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -65,6 +79,10 @@ int32 ARPGCharacter::GetPlayerLevel_Implementation()
 	return RpgPlayerState->GetPlayerLevel();
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InXP"></param>
 void ARPGCharacter::AddToXP_Implementation(int32 InXP)
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -73,6 +91,10 @@ void ARPGCharacter::AddToXP_Implementation(int32 InXP)
 	RpgPlayerState->AddToXP(InXP);
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InPlayerLevel"></param>
 void ARPGCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -87,6 +109,10 @@ void ARPGCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
 
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InAttributePoints"></param>
 void ARPGCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints)
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -103,11 +129,17 @@ void ARPGCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints)
 	RpgPlayerState->AddToSpellPoints(InSpellPoints);
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGCharacter::LevelUp_Implementation()
 {
 	MulticastLevelUpParticles();
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
 {
 	if (!IsValid(LevelUpNiagaraComponent)) return;
@@ -121,6 +153,10 @@ void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
 	LevelUpNiagaraComponent->Activate(true);
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
 int32 ARPGCharacter::GetXP_Implementation() const
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -128,6 +164,10 @@ int32 ARPGCharacter::GetXP_Implementation() const
 	return RpgPlayerState->GetPlayerXP();;
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
 int32 ARPGCharacter::GetAttributePoints_Implementation() const
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -135,6 +175,10 @@ int32 ARPGCharacter::GetAttributePoints_Implementation() const
 	return RpgPlayerState->GetPlayerAttributePoints();
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
 int32 ARPGCharacter::GetSpellPoints_Implementation() const
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -181,6 +225,9 @@ int32 ARPGCharacter::FindLevelForXP_Implementation(int32 InXP) const
 	return RpgPlayerState->LevelUpInfo->FindLevelForXP(InXP);
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGCharacter::InitAbilityActorInfo()
 {
 	// Init ability actor info for the server
