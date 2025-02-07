@@ -14,12 +14,9 @@ void URPGDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 {
 	FGameplayEffectSpecHandle DamageSpecHandle = MakeOutgoingGameplayEffectSpec(DamageEffectClass, 1);
 
-	for (TTuple<FGameplayTag, FScalableFloat> Pair : DamageTypes)
-	{
-		// Gets Damage at the abilities level from curve;
-		const float ScaledDamage = Pair.Value.GetValueAtLevel(GetAbilityLevel());
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(DamageSpecHandle, Pair.Key, ScaledDamage);
-	}
+	// Gets Damage at the abilities level from curve;
+	const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(DamageSpecHandle, DamageType, ScaledDamage);
 
 	GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(*DamageSpecHandle.Data.Get(), UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor));
 }
@@ -41,14 +38,24 @@ FTaggedMontage URPGDamageGameplayAbility::GetRandomTaggedMontageFromArray(const 
 }
 
 /// <summary>
-/// 
+/// Creates a new DamageEffectParams and filling it in with default info
 /// </summary>
-/// <param name="InLevel"></param>
-/// <param name="DamageType"></param>
+/// <param name="TargetActor"></param>
 /// <returns></returns>
-float URPGDamageGameplayAbility::GetDamageByDamageType(float InLevel, const FGameplayTag& DamageType)
+FDamageEffectParams URPGDamageGameplayAbility::MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor) const
 {
-	checkf(DamageTypes.Contains(DamageType), TEXT("Gameplay Ability [%s] Does not Contain DamageType [%s] "), *GetNameSafe(this), *DamageType.ToString());
+	FDamageEffectParams Params;
+	Params.WorldContextObject = GetAvatarActorFromActorInfo();
+	Params.DamageGameplayEffectClass = DamageEffectClass;
+	Params.SourceAbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
+	Params.TargetAbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+	Params.BaseDamage = Damage.GetValueAtLevel(GetAbilityLevel());
+	Params.AbilityLevel = GetAbilityLevel();
+	Params.DamageType = DamageType;
+	Params.DebuffChance = DebuffChance;
+	Params.DebuffDamage = DebuffDamage;
+	Params.DebuffDuration = DebuffDuration;
+	Params.DebuffFrequency = DebuffFrequency;
 
-	return DamageTypes[DamageType].GetValueAtLevel(InLevel);
+	return Params;
 }

@@ -7,6 +7,7 @@
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "Player/RPGPlayerState.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
+#include "RPGGameplayTags.h"
 
 /// <summary>
 /// 
@@ -42,6 +43,8 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 
 	if (GetRPGASC())
 	{
+		GetRPGASC()->AbilityEquippedDelegate.AddUObject(this, &UOverlayWidgetController::OnAbilityEquipped);
+
 		if (GetRPGASC()->bStartupAbilitiesGiven)
 			BroadcastAbilityInfo();
 		else
@@ -105,4 +108,26 @@ void UOverlayWidgetController::OnXPChanged(int32 NewXP)
 
 		OnXPPercentChangedDelegate.Broadcast(XPBarPercent);
 	}
+}
+
+void UOverlayWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& Status, const FGameplayTag& Slot, const FGameplayTag& PreviousSlot)
+{
+	const FRPGGameplayTags& GameplayTags = FRPGGameplayTags::Get();
+
+	// Clear out LastSlot
+	FRPGAbilityInfo LastSlotInfo;
+
+	LastSlotInfo.StatusTag = GameplayTags.Abilities_Status_Unlocked;
+	LastSlotInfo.InputTag = PreviousSlot;
+	LastSlotInfo.AbilityTag = GameplayTags.Abilities_None;
+
+	// Broadcast empty info if PreviousSlot is a valud slot. Only if equipping and already-equipped spell
+	AbilityInfoDelegate.Broadcast(LastSlotInfo);
+
+	// Fill CurrentSlot with new info
+	FRPGAbilityInfo CurrentSlotInfo = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+	CurrentSlotInfo.StatusTag = Status;
+	CurrentSlotInfo.InputTag = Slot;
+
+	AbilityInfoDelegate.Broadcast(CurrentSlotInfo);
 }

@@ -6,6 +6,49 @@
 #include "GameplayEffectTypes.h"
 #include "RPGAbilityTypes.generated.h"
 
+class UGameplayEffect;
+
+USTRUCT(BlueprintType)
+struct FDamageEffectParams
+{
+	GENERATED_BODY()
+
+	FDamageEffectParams() {};
+
+	UPROPERTY()
+	TObjectPtr<UObject> WorldContextObject = nullptr;
+
+	UPROPERTY()
+	TSubclassOf<UGameplayEffect> DamageGameplayEffectClass = nullptr;
+	
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> SourceAbilitySystemComponent;
+
+	UPROPERTY()
+	TObjectPtr<UAbilitySystemComponent> TargetAbilitySystemComponent;
+
+	UPROPERTY()
+	float BaseDamage = 0;
+
+	UPROPERTY()
+	float AbilityLevel = 1;
+
+	UPROPERTY()
+	FGameplayTag DamageType = FGameplayTag();
+
+	UPROPERTY()
+	float DebuffChance = 0;
+
+	UPROPERTY()
+	float DebuffDamage = 0;
+
+	UPROPERTY()
+	float DebuffFrequency = 0;
+
+	UPROPERTY()
+	float DebuffDuration = 0;
+};
+
 /// <summary>
 /// Everything in this struct is REQUIRED for making a Custom Gameplay Effect Context
 /// </summary>

@@ -72,11 +72,26 @@ public:
 	FGameplayTag Attributes_Resistance_Physical;
 	/*Damage Resistances Tags End <-*/
 
+	/*Debuff Type Tags ->*/
+	FGameplayTag Debuff_Burn;
+	FGameplayTag Debuff_Stun;
+	FGameplayTag Debuff_Arcane;
+	FGameplayTag Debuff_Physical;
+
+	FGameplayTag Debuff_Chance;
+	FGameplayTag Debuff_Damage;
+	FGameplayTag Debuff_Frequency;
+	FGameplayTag Debuff_Duration;
+
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToDebuffs;
+	/*Debuff Type Tags End<-*/
+
 	/*Effect Tags ->*/
 	FGameplayTag Effects_HitReact;
 	/*Effect Tags <-*/
 
 	/*Ability Tags ->*/
+	FGameplayTag Abilities_None;
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
 	FGameplayTag Abilities_Fire_Firebolt;

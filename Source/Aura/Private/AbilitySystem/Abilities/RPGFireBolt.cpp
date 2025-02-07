@@ -6,7 +6,7 @@
 
 FString URPGFireBolt::GetDescription(int32 Level)
 {
-	const int32 Damage = GetDamageByDamageType(Level, FRPGGameplayTags::Get().Damage_Fire);
+	const int32 ScaledDamage = Damage.GetValueAtLevel(Level);
 	const float ManaCost = FMath::Abs(GetManaCost(Level));
 	const float Cooldown = GetCooldown(Level);
 
@@ -29,7 +29,7 @@ FString URPGFireBolt::GetDescription(int32 Level)
 			"<Default>Launches a bolt of fire, exploding on impact and dealing:</>"
 			"<FireDamage> %d Fire</>"
 			"<Default> damage with a chance of </>"
-			"<FireDamage>Burning</>"), Level,ManaCost,Cooldown, Damage);
+			"<FireDamage>Burning</>"), Level,ManaCost,Cooldown, ScaledDamage);
 	}
 
 	else
@@ -53,14 +53,14 @@ FString URPGFireBolt::GetDescription(int32 Level)
 			// Damage
 			"<FireDamage> %d Fire</>"
 			"<Default> damage with a chance of </>"
-			"<FireDamage>Burning</>"), Level,ManaCost,Cooldown, FMath::Min(Level, NumProjectiles), Damage);
+			"<FireDamage>Burning</>"), Level,ManaCost,Cooldown, FMath::Min(Level, NumProjectiles), ScaledDamage);
 	}
 }
 
 FString URPGFireBolt::GetNextLevelDescription(int32 Level)
 {
-	const int32 Damage = GetDamageByDamageType(Level, FRPGGameplayTags::Get().Damage_Fire);
-	const int32 LastLevelDamage = GetDamageByDamageType(Level -1, FRPGGameplayTags::Get().Damage_Fire);
+	const int32 ScaledDamage = Damage.GetValueAtLevel(Level);
+	const int32 LastLevelScaledDamage = Damage.GetValueAtLevel(Level-1);
 
 	const float ManaCost = FMath::Abs(GetManaCost(Level));
 	const float LastLevelManaCost = FMath::Abs(GetManaCost(Level-1));
@@ -93,5 +93,5 @@ FString URPGFireBolt::GetNextLevelDescription(int32 Level)
 		LastLevelManaCost, ManaCost,
 		LastLevelCooldown,Cooldown, 
 		FMath::Min(Level, NumProjectiles), 
-		LastLevelDamage, Damage);
+		LastLevelScaledDamage, ScaledDamage);
 }
