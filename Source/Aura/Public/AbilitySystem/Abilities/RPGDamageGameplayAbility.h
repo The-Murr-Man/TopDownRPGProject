@@ -26,7 +26,7 @@ public:
 	UFUNCTION(BlueprintPure)
 	FTaggedMontage GetRandomTaggedMontageFromArray(const TArray<FTaggedMontage>& TaggedMontages);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintPure)
 	FDamageEffectParams MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
 
 protected:
@@ -39,6 +39,15 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	FScalableFloat Damage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DeathImpulseMagnitude = 1000;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage|Knockback")
+	float KnockbackForceMagnitude = 1000;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage|Knockback")
+	float KnockbackChance = 0;
 
 	/// <summary>
 	/// TODO: Make Scalable Floats and Create Curve Tables

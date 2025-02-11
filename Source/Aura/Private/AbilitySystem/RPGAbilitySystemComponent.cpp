@@ -59,6 +59,31 @@ void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubc
 /// 
 /// </summary>
 /// <param name="InputTag"></param>
+void URPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
+{
+	if (!InputTag.IsValid()) return;
+
+	// Looping through all activatible Abilities
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		// Checks if InputTag is in DynamicAbilityTags
+		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		{
+			AbilitySpecInputPressed(AbilitySpec);
+
+			// Checks if Ability Spec is already active
+			if (AbilitySpec.IsActive())
+			{
+				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, AbilitySpec.Handle, AbilitySpec.ActivationInfo.GetActivationPredictionKey());
+			}
+		}
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InputTag"></param>
 void URPGAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
 {
 	if (!InputTag.IsValid()) return;
@@ -92,9 +117,10 @@ void URPGAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		// Checks if InputTag is in DynamicAbilityTags
-		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))
+		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag) && AbilitySpec.IsActive())
 		{
 			AbilitySpecInputReleased(AbilitySpec);
+			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, AbilitySpec.Handle, AbilitySpec.ActivationInfo.GetActivationPredictionKey());
 		}
 	}
 }

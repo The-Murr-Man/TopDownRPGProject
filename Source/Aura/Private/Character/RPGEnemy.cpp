@@ -105,6 +105,8 @@ void ARPGEnemy::InitAbilityActorInfo()
 	{
 		InitializeDefaultAttributes();
 	}
+
+	OnASCRegistered.Broadcast(AbilitySystemComponent);
 }
 
 void ARPGEnemy::InitializeDefaultAttributes()
@@ -153,12 +155,12 @@ int32 ARPGEnemy::GetPlayerLevel_Implementation()
 	return Level;
 }
 
-void ARPGEnemy::Die()
+void ARPGEnemy::Die(const FVector& DeathImpulse)
 {
 	SetLifeSpan(LifeSpan);
 
 	if (RPGAIController) RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"),true);
-	Super::Die();
+	Super::Die(DeathImpulse);
 }
 
 

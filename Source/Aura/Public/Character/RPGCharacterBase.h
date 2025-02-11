@@ -16,6 +16,7 @@ class UGameplayEffect;
 class UGameplayAbility;
 class UAnimMontage;
 class UNiagaraSystem;
+class UDebuffNiagaraComponent;
 
 UCLASS(Abstract)
 class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
@@ -33,7 +34,7 @@ public:
 	/** Combat Interface */
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override { return HitReactMontage; };
 	// Used on Server
-	virtual void Die() override;
+	virtual void Die(const FVector& DeathImpulse) override;
 	virtual FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag) override;
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetAvatar_Implementation() override;
@@ -43,12 +44,16 @@ public:
 	virtual int32 GetMinionCount_Implementation() override { return MinionCount; }
 	virtual void IncrementMinionCount_Implementation(int32 Amount) override { MinionCount+= Amount; }
 	virtual ECharacterClass GetCharacterClass_Implementation() override { return CharacterClass; }
+	virtual FOnASCRegistered GetOnASCRegisteredDelegate() override { return OnASCRegistered; }
+	virtual FOnDeath GetOnDeathDelegate() override { return OnDeath; }
 	/** Combat Interface */
 
+	FOnASCRegistered OnASCRegistered;
+	FOnDeath OnDeath;
 
 	// Used on both server and client
 	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastHandleDeath();
+	virtual void MulticastHandleDeath(const FVector& DeathImpulse);
 
 	UPROPERTY(EditAnywhere, Category = "Combat");
 	TArray<FTaggedMontage> AttackMontages;
@@ -105,6 +110,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere);
 	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
 
+	// GAS
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
 
@@ -119,6 +125,7 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = Attributes);
 	TSubclassOf<UGameplayEffect> DefaultVitalAttributes;
+	//
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Combat");
 	UNiagaraSystem* BloodEffect;
@@ -126,6 +133,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Combat");
 	TObjectPtr<USoundBase> DeathSound;
 
+	UPROPERTY(VisibleAnywhere, Category = "Combat|Debuff");
+	TObjectPtr<UDebuffNiagaraComponent> BurnDebuffComponent;
 private:
 
 	UPROPERTY(EditAnywhere, Category = "Abilities");

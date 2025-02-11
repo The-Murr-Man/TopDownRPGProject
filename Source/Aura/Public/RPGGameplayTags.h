@@ -55,6 +55,13 @@ public:
 	FGameplayTag InputTag_Passive_2;
 	/*Input Tags End <-*/
 
+	/*Player Tags ->*/
+	FGameplayTag Player_Block_InputPressed;
+	FGameplayTag Player_Block_InputHeld;
+	FGameplayTag Player_Block_InputReleased;
+	FGameplayTag Player_Block_CurserTrace;
+	/*Player Tags End <-*
+
 	/*Damage Type Tags ->*/
 	FGameplayTag Damage;
 	FGameplayTag Damage_Fire;
@@ -113,7 +120,8 @@ public:
 	/*Ability Type Tags End <-*/
 
 	/*Cooldown Tags ->*/
-	FGameplayTag Cooldoawn_Fire_Firebolt;
+	FGameplayTag Cooldown_Fire_Firebolt;
+	FGameplayTag Cooldown_Lightning_Electrocute;
 	/*Cooldown Tags <-*/
 
 	/*Combat Socket Tags ->*/

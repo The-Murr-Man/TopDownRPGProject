@@ -7,6 +7,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "RPGGameplayTags.h"
+#include "RPGAbilityTypes.h"
 
 void URPGProjectileSpell::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
@@ -21,40 +22,26 @@ void URPGProjectileSpell::SpawnProjectile(const FVector& ProjectileTargetLocatio
 
 	ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetAvatarActorFromActorInfo());
 
-	if (CombatInterface)
-	{
-		const FVector SocketLocation = CombatInterface->Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(),SocketTag);
-		FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
+	if (!CombatInterface) return;
 
-		if (bOverridePitch) Rotation.Pitch = PitchOverride;
+	const FVector SocketLocation = CombatInterface->Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(),SocketTag);
+	FRotator Rotation = (ProjectileTargetLocation - SocketLocation).Rotation();
 
-		FTransform SpawnTransform;
-		SpawnTransform.SetLocation(SocketLocation);
+	if (bOverridePitch) Rotation.Pitch = PitchOverride;
 
-		// TODO: Set the projectile Rotation
-		SpawnTransform.SetRotation(Rotation.Quaternion());
+	FTransform SpawnTransform;
+	SpawnTransform.SetLocation(SocketLocation);
 
-		
-		AActor* OwningActor = GetOwningActorFromActorInfo();
+	SpawnTransform.SetRotation(Rotation.Quaternion());
 
-		ARPGProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARPGProjectile>(ProjectileClass, SpawnTransform, OwningActor, Cast<APawn>(OwningActor), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	AActor* OwningActor = GetOwningActorFromActorInfo();
 
-		UAbilitySystemComponent* SourceASC =  UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+	ARPGProjectile* Projectile = GetWorld()->SpawnActorDeferred<ARPGProjectile>(ProjectileClass, SpawnTransform, OwningActor, Cast<APawn>(OwningActor), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-		FGameplayEffectContextHandle EffectContextHandle = SourceASC->MakeEffectContext();
-		FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), EffectContextHandle);
-		EffectContextHandle.SetAbility(this);
-		EffectContextHandle.AddSourceObject(Projectile);
+	// Damage Effect Params
+	Projectile->DamageEffectParams = MakeDamageEffectParamsFromClassDefaults();
 
-		// Gets the GameplayTags for our singleton
-		FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
 
-		// Gets Damage at the abilities level from curve;
-		const float ScaledDamage = Damage.GetValueAtLevel(GetAbilityLevel());
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, DamageType, ScaledDamage);
-		
-		Projectile->DamageEffectSpecHandle = SpecHandle;
-
-		Projectile->FinishSpawning(SpawnTransform);
-	}
+	Projectile->FinishSpawning(SpawnTransform);
+	
 }

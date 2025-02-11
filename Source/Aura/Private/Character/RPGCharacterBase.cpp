@@ -8,12 +8,17 @@
 #include "Aura/Aura.h"
 #include "RPGGameplayTags.h"
 #include "Kismet/GameplayStatics.h"
+#include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
 
 // Sets default values
 ARPGCharacterBase::ARPGCharacterBase()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	BurnDebuffComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>(TEXT("BurnDebuffComponent"));
+	BurnDebuffComponent->SetupAttachment(GetRootComponent());
+	BurnDebuffComponent->DebuffTag = FRPGGameplayTags::Get().Debuff_Burn;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
@@ -138,14 +143,14 @@ void ARPGCharacterBase::InitAbilityActorInfo()
 {
 }
 
-void ARPGCharacterBase::Die()
+void ARPGCharacterBase::Die(const FVector& DeathImpulse)
 {
 	// Detaches Weapon
 	WeaponMesh->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
-	MulticastHandleDeath();
+	MulticastHandleDeath(DeathImpulse);
 }
 
-void ARPGCharacterBase::MulticastHandleDeath_Implementation()
+void ARPGCharacterBase::MulticastHandleDeath_Implementation(const FVector& DeathImpulse)
 {
 	UGameplayStatics::PlaySoundAtLocation(this, DeathSound, GetActorLocation(), GetActorRotation());
 
@@ -153,12 +158,14 @@ void ARPGCharacterBase::MulticastHandleDeath_Implementation()
 	WeaponMesh->SetSimulatePhysics(true);
 	WeaponMesh->SetEnableGravity(true);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	WeaponMesh->AddImpulse(DeathImpulse * 0.1, NAME_None, true);
 
 	// Simulate Physics for Characters
 	GetMesh()->SetSimulatePhysics(true);
 	GetMesh()->SetEnableGravity(true);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
 	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	GetMesh()->AddImpulse(DeathImpulse,NAME_None, true);
 
 	// Capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -166,6 +173,8 @@ void ARPGCharacterBase::MulticastHandleDeath_Implementation()
 	Dissolve();
 
 	bDead = true;
+
+	OnDeath.Broadcast(this);
 }
 
 UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const

@@ -49,9 +49,51 @@ bool FRPGGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, boo
 		{
 			RepBits |= 1 << 8;
 		}
+
+		// Added Debuff Success from our Custom Context
+		if (bIsSuccessfulDebuff)
+		{
+			RepBits |= 1 << 9;
+		}
+
+		// Added DebuffDamage from our Custom Context
+		if (DebuffDamage > 0)
+		{
+			RepBits |= 1 << 10;
+		}
+
+		// Added DebuffDuration from our Custom Context
+		if (DebuffDuration > 0)
+		{
+			RepBits |= 1 << 11;
+		}
+
+		// Added DebuffFrequency from our Custom Context
+		if (DebuffFrequency > 0)
+		{
+			RepBits |= 1 << 12;
+		}
+
+		// Added DebuffFrequency from our Custom Context
+		if (DamageType.IsValid())
+		{
+			RepBits |= 1 << 13;
+		}
+
+		// Added DeathImpulse from our Custom Context
+		if (!DeathImpulse.IsZero())
+		{
+			RepBits |= 1 << 14;
+		}
+
+		// Added KnockbackForce from our Custom Context
+		if (!KnockbackForce.IsZero())
+		{
+			RepBits |= 1 << 15;
+		}
 	}
 
-	Ar.SerializeBits(&RepBits, 9);
+	Ar.SerializeBits(&RepBits, 16);
 
 	if (RepBits & (1 << 0))
 	{
@@ -102,6 +144,48 @@ bool FRPGGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, boo
 	if (RepBits & (1 << 8))
 	{
 		Ar << bIsCriticalHit;
+	}
+
+	if (RepBits & (1 << 9))
+	{
+		Ar << bIsSuccessfulDebuff;
+	}
+
+	if (RepBits & (1 << 10))
+	{
+		Ar << DebuffDamage;
+	}
+
+	if (RepBits & (1 << 11))
+	{
+		Ar << DebuffDuration;
+	}
+
+	if (RepBits & (1 << 12))
+	{
+		Ar << DebuffFrequency;
+	}
+
+	if (RepBits & (1 << 13))
+	{
+		if (Ar.IsLoading())
+		{
+			if (!DamageType.IsValid())
+			{
+				DamageType = TSharedPtr<FGameplayTag>(new FGameplayTag());
+			}
+		}
+		DamageType->NetSerialize(Ar, Map, bOutSuccess);
+	}
+
+	if (RepBits & (1 << 14))
+	{
+		DeathImpulse.NetSerialize(Ar, Map, bOutSuccess);
+	}
+
+	if (RepBits & (1 << 15))
+	{
+		KnockbackForce.NetSerialize(Ar, Map, bOutSuccess);
 	}
 
 	if (Ar.IsLoading())

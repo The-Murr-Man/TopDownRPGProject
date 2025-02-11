@@ -30,5 +30,5 @@ protected:
 	TSubclassOf<ARPGProjectile> ProjectileClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	int32 NumProjectiles = 5;
+	int32 MaxNumProjectiles = 5;
 };

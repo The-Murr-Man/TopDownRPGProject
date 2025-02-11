@@ -14,6 +14,7 @@
 #include "NavigationPath.h"
 #include "GameFramework/Character.h"
 #include "UI/Widget/DamageTextComponent.h"
+#include "NiagaraFunctionLibrary.h"
 
 ARPGPlayerController::ARPGPlayerController()
 {
@@ -33,8 +34,6 @@ void ARPGPlayerController::PlayerTick(float DeltaTime)
 		AutoRun();
 	}
 }
-
-
 
 void ARPGPlayerController::BeginPlay()
 {
@@ -59,6 +58,13 @@ void ARPGPlayerController::BeginPlay()
 	SetInputMode(InputModeData);
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="DamageAmount"></param>
+/// <param name="TargetCharacter"></param>
+/// <param name="bBlockedHit"></param>
+/// <param name="bCriticalHit"></param>
 void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit)
 {
 	if (IsValid(TargetCharacter) && DamageTextComponentClass && IsLocalController())
@@ -78,8 +84,22 @@ void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, A
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGPlayerController::CursorTrace()
 {
+	// If blocking cursor trace clear highlight target and return
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_CurserTrace))
+	{
+		if (LastActor) LastActor->UnHighlightActor();
+		if (ThisActor) ThisActor->UnHighlightActor();
+
+		LastActor = nullptr;
+		ThisActor = nullptr;
+		return;
+	}
+
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 
 	if (!CursorHit.bBlockingHit) return;
@@ -95,6 +115,9 @@ void ARPGPlayerController::CursorTrace()
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGPlayerController::AutoRun()
 {
 	if (bUseClickToMove)
@@ -117,6 +140,9 @@ void ARPGPlayerController::AutoRun()
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -140,6 +166,10 @@ void ARPGPlayerController::SetupInputComponent()
 	RPGInputComponent->BindAbilityActions(InputConfig, this, &ThisClass::AbilityInputTagPressed, &ThisClass::AbilityInputTagReleased, &ThisClass::AbilityInputTagHeld);
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InputActionValue"></param>
 void ARPGPlayerController::Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
@@ -156,23 +186,37 @@ void ARPGPlayerController::Move(const FInputActionValue& InputActionValue)
 	}
 }
 
-
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InputTag"></param>
 void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputPressed)) return;
+
 	// Only do this if you want to use Click to move
 	if (bUseClickToMove)
 	{
+		// HARDCODED FOR LEFT MOUSE BUTTON
 		if (InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
 		{
 			bTargeting = ThisActor ? true : false;
 			bAutoRunning = false;
 		}
 	}
+
+	if (GetASC()) GetASC()->AbilityInputTagPressed(InputTag);
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InputTag"></param>
 void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
 	if (!GetASC()) return;
+
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputReleased)) return;
 
 	// If not Using Click to move
 	if (!bUseClickToMove) GetASC()->AbilityInputTagReleased(InputTag);
@@ -211,6 +255,7 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 						bAutoRunning = true;
 					}
 				}
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem, CachedDestination);
 			}
 
 			FollowTime = 0;
@@ -219,10 +264,16 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InputTag"></param>
 void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
 	if (!GetASC()) return;
 	
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputHeld)) return;
+
 	// Not using click to move
 	if (!bUseClickToMove)
 	{
@@ -260,6 +311,10 @@ void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <returns></returns>
 URPGAbilitySystemComponent* ARPGPlayerController::GetASC()
 {
 	if (!RPGAbilitySystemComponent)

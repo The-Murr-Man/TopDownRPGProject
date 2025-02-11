@@ -59,6 +59,35 @@ void ARPGCharacter::PossessedBy(AController* NewController)
 /// <summary>
 /// 
 /// </summary>
+void ARPGCharacter::InitAbilityActorInfo()
+{
+	// Init ability actor info for the server
+	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
+
+	if (!RpgPlayerState) return;
+	RpgPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(RpgPlayerState, this);
+	Cast<URPGAbilitySystemComponent>(RpgPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
+
+	// Gets and sets ability system component and attribute set from player state
+	AbilitySystemComponent = RpgPlayerState->GetAbilitySystemComponent();
+	AttributeSet = RpgPlayerState->GetAttributeSet();
+
+	OnASCRegistered.Broadcast(AbilitySystemComponent);
+
+	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
+	{
+		if (ARPGHUD* RPGHUD = Cast<ARPGHUD>(RPGPlayerContoller->GetHUD()))
+		{
+			RPGHUD->InitOverlay(RPGPlayerContoller, RpgPlayerState, AbilitySystemComponent, AttributeSet);
+		}
+	}
+
+	InitializeDefaultAttributes();
+}
+
+/// <summary>
+/// 
+/// </summary>
 void ARPGCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
@@ -225,33 +254,7 @@ int32 ARPGCharacter::FindLevelForXP_Implementation(int32 InXP) const
 	return RpgPlayerState->LevelUpInfo->FindLevelForXP(InXP);
 }
 
-/// <summary>
-/// 
-/// </summary>
-void ARPGCharacter::InitAbilityActorInfo()
-{
-	// Init ability actor info for the server
-	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
 
-	if (!RpgPlayerState) return;
-	RpgPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(RpgPlayerState, this);
-	Cast<URPGAbilitySystemComponent>(RpgPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
-
-	// Gets and sets ability system component and attribute set from player state
-	AbilitySystemComponent = RpgPlayerState->GetAbilitySystemComponent();
-	AttributeSet = RpgPlayerState->GetAttributeSet();
-
-	
-	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
-	{
-		if (ARPGHUD* RPGHUD = Cast<ARPGHUD>(RPGPlayerContoller->GetHUD()))
-		{
-			RPGHUD->InitOverlay(RPGPlayerContoller, RpgPlayerState, AbilitySystemComponent, AttributeSet);
-		}
-	}
-
-	InitializeDefaultAttributes();
-}
 
 
 

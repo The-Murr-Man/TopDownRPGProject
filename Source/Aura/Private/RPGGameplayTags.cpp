@@ -45,6 +45,12 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.InputTag_Passive_2 = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Passive.2"), FString("Input Tag for Passive 2"));
 	//Input Tags End <-
 	
+	/* Adding Player Tags To Gameplay Tags Manager->*/
+	GameplayTags.Player_Block_InputPressed = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.Pressed"), FString("Blocks Tags While InputPressed"));
+	GameplayTags.Player_Block_InputHeld = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.Held"), FString("Blocks Tags While InputHeld"));
+	GameplayTags.Player_Block_InputReleased = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.Released"), FString("Blocks Tags While InputReleased"));
+	GameplayTags.Player_Block_CurserTrace = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.CurserTrace"), FString("Blocks Tags While CurserTacing"));
+	//Player Tags End <-
 
 	/*Adding Damage Type Tags To Gameplay Tags Manager->*/
 	GameplayTags.Damage = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage"), FString("Damage"));
@@ -115,7 +121,8 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	/*Ability Type Tags End <-*/
 
 	/*Adding Cooldown Tags To Gameplay Tags Manager->*/
-	GameplayTags.Cooldoawn_Fire_Firebolt = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.Firebolt"), FString("Firebolt Cooldown Tag"));
+	GameplayTags.Cooldown_Fire_Firebolt = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.Firebolt"), FString("Firebolt Cooldown Tag"));
+	GameplayTags.Cooldown_Lightning_Electrocute = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Lightning.Electrocute"), FString("Electrocute Cooldown Tag"));
 	//Cooldown Tags End <-
 
 	/*Adding Combat Socket Tags To Gameplay Tags Manager->*/

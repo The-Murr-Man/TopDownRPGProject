@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Player/RPGPlayerController.h"
 #include "AbilitySystem/RPGAbilitySystemLibrary.h"
+#include "GameplayEffectComponents/TargetTagsGameplayEffectComponent.h"
 
 /// <summary>
 /// 
@@ -176,9 +177,12 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	FEffectProperties Props;
 	
+	FEffectProperties Props;
 	SetEffectProperties(Data, Props);
+
+	// Check if source character is dead
+	if (Props.TargetCharacter->Implements<UCombatInterface>() && ICombatInterface::Execute_IsDead(Props.TargetCharacter)) return;
 
 	// Clamping
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute())
@@ -193,73 +197,164 @@ void URPGAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbac
 
 	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
-		const float LocalIncomingDamage = GetIncomingDamage();
-		SetIncomingDamage(0);
-
-		if (LocalIncomingDamage > 0)
-		{
-			const float NewHealth = GetHealth() - LocalIncomingDamage;
-			SetHealth(FMath::Clamp(NewHealth, 0, GetMaxHealth()));
-
-			const bool bFatal = NewHealth <= 0;
-
-			if (bFatal)
-			{
-				ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor);
-				if (!CombatInterface) return;
-
-				CombatInterface->Die();
-
-				SendXPEvent(Props);
-			}
-
-			else
-			{
-				// Activate Ability if enemy has specific tag
-				FGameplayTagContainer TagContainer;
-				TagContainer.AddTag(FRPGGameplayTags::Get().Abilities_HitReact);
-				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
-			}
-
-			const bool bBlock = URPGAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
-			const bool bCrit = URPGAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-
-			ShowFloatingText(Props, LocalIncomingDamage,bBlock,bCrit);
-		}
+		HandleIncomingDamage(Props);
 	}
 
 	if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
 	{
-		const float LocalIncomingXP = GetIncomingXP();
-		SetIncomingXP(0);
+		HandleIncomingXP(Props);
+	}
+}
 
-		// Source character is the owner, since GA_ListenForEvents applies GE_EventBasedEffect, adding to IncomingXP 
-		if (Props.SourceCharacter->Implements<UPlayerInterface>() && Props.SourceCharacter->Implements<UCombatInterface>())
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Props"></param>
+void URPGAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
+{
+	const float LocalIncomingDamage = GetIncomingDamage();
+	SetIncomingDamage(0);
+
+	if (LocalIncomingDamage > 0)
+	{
+		const float NewHealth = GetHealth() - LocalIncomingDamage;
+		SetHealth(FMath::Clamp(NewHealth, 0, GetMaxHealth()));
+
+		const bool bFatal = NewHealth <= 0;
+
+		if (bFatal)
 		{
-			const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
-			const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Props.SourceCharacter);
+			//Use Death Impulse
 
-			const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Props.SourceCharacter, CurrentXP + LocalIncomingXP);
-			const int32 NumLevelUps = NewLevel - CurrentLevel;
+			ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor);
+			if (!CombatInterface) return;
 
-			if (NumLevelUps >0)
-			{
-				const int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, CurrentLevel);
-				const int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, CurrentLevel);
+			CombatInterface->Die(URPGAbilitySystemLibrary::GetDealthImpulse(Props.EffectContextHandle));
 
-				IPlayerInterface::Execute_AddToPlayerLevel(Props.SourceCharacter, NumLevelUps);
-				IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
-				IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
-
-				// Refills Health and Mana Globes on level up
-				BTopOffHealth = true;
-				BTopOffMana = true;
-
-				IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
-			}
-
-			IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
+			SendXPEvent(Props);
 		}
+
+		else
+		{
+			// Activate Ability if enemy has specific tag
+			FGameplayTagContainer TagContainer;
+			TagContainer.AddTag(FRPGGameplayTags::Get().Abilities_HitReact);
+			Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+
+			const FVector& KnockbackForce = URPGAbilitySystemLibrary::GetKnockbackForce(Props.EffectContextHandle);
+			if (KnockbackForce.Length() > 1)
+			{
+				Props.TargetCharacter->LaunchCharacter(KnockbackForce, true, true);
+			}
+		}
+
+		const bool bBlock = URPGAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+		const bool bCrit = URPGAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+		const bool bIsSuccessfulDebuff = URPGAbilitySystemLibrary::IsSuccessfulDebuff(Props.EffectContextHandle);
+
+		ShowFloatingText(Props, LocalIncomingDamage, bBlock, bCrit);
+
+		if (bIsSuccessfulDebuff)
+		{
+			HandleDebuff(Props);
+		}
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Props"></param>
+void URPGAttributeSet::HandleIncomingXP(FEffectProperties& Props)
+{
+	const float LocalIncomingXP = GetIncomingXP();
+	SetIncomingXP(0);
+
+	// Source character is the owner, since GA_ListenForEvents applies GE_EventBasedEffect, adding to IncomingXP 
+	if (Props.SourceCharacter->Implements<UPlayerInterface>() && Props.SourceCharacter->Implements<UCombatInterface>())
+	{
+		const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+		const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Props.SourceCharacter);
+
+		const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Props.SourceCharacter, CurrentXP + LocalIncomingXP);
+		const int32 NumLevelUps = NewLevel - CurrentLevel;
+
+		if (NumLevelUps > 0)
+		{
+			const int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, CurrentLevel);
+			const int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, CurrentLevel);
+
+			IPlayerInterface::Execute_AddToPlayerLevel(Props.SourceCharacter, NumLevelUps);
+			IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
+			IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
+
+			// Refills Health and Mana Globes on level up
+			BTopOffHealth = true;
+			BTopOffMana = true;
+
+			IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
+		}
+
+		IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Props"></param>
+void URPGAttributeSet::HandleDebuff(FEffectProperties& Props)
+{
+	const FRPGGameplayTags& GameplayTags = FRPGGameplayTags::Get();
+	FGameplayEffectContextHandle EffectContext = Props.SourceASC->MakeEffectContext();
+
+	EffectContext.AddSourceObject(Props.SourceCharacter);
+
+	// Creating new GameplayEffect in C++ and setting it up 
+	const FGameplayTag DamageType = URPGAbilitySystemLibrary::GetDamageType(Props.EffectContextHandle);
+	const float DebuffDamage = URPGAbilitySystemLibrary::GetDebuffDamage(Props.EffectContextHandle);
+	const float DebuffDuration = URPGAbilitySystemLibrary::GetDebuffDuration(Props.EffectContextHandle);
+	const float DebuffFrequency = URPGAbilitySystemLibrary::GetDebuffFrequency(Props.EffectContextHandle);
+
+	FString DebuffName = FString::Printf(TEXT("DynamicDebuff_%s"), *DamageType.ToString());
+
+	UGameplayEffect* Effect = NewObject<UGameplayEffect>(GetTransientPackage(), FName(DebuffName));
+
+	Effect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
+	Effect->Period = DebuffFrequency;
+	Effect->DurationMagnitude = FScalableFloat(DebuffDuration);
+
+	//Effect->InheritableOwnedTagsContainer.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
+
+	FInheritedTagContainer TagContainer = FInheritedTagContainer();
+	UTargetTagsGameplayEffectComponent& Component = Effect->FindOrAddComponent<UTargetTagsGameplayEffectComponent>();
+	TagContainer.Added.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
+	TagContainer.CombinedTags.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
+	Component.SetAndApplyTargetTagChanges(TagContainer);
+
+	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
+	Effect->StackLimitCount = 1;
+
+	const int32 Index = Effect->Modifiers.Num();
+
+	Effect->Modifiers.Add(FGameplayModifierInfo());
+
+	FGameplayModifierInfo& ModifierInfo = Effect->Modifiers[Index];
+
+	ModifierInfo.ModifierMagnitude = FScalableFloat(DebuffDamage);
+	ModifierInfo.ModifierOp = EGameplayModOp::Additive;
+	ModifierInfo.Attribute = URPGAttributeSet::GetIncomingDamageAttribute();
+
+	// Could use a curve table 
+	if (FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(Effect, EffectContext, 1))
+	{
+		FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(MutableSpec->GetContext().Get());
+
+		TSharedPtr<FGameplayTag> DebuffDamageType = MakeShareable(new FGameplayTag(DamageType));
+		RPGContext->SetDamageType(DebuffDamageType);
+
+		// Apply GameplayEffect
+		Props.TargetASC->ApplyGameplayEffectSpecToSelf(*MutableSpec);
 	}
 }
 
@@ -336,7 +431,6 @@ void URPGAttributeSet::SendXPEvent(const FEffectProperties& Props)
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Props.SourceCharacter, GameplayTags.Attributes_Meta_IncomingXP,Payload);
 	}
 }
-
 
 /*
 * Primary Attribute Rep Functions ->
