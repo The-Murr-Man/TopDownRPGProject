@@ -63,6 +63,7 @@ void URPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inpu
 {
 	if (!InputTag.IsValid()) return;
 
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	// Looping through all activatible Abilities
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
@@ -88,6 +89,7 @@ void URPGAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTa
 {
 	if (!InputTag.IsValid()) return;
 
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	// Looping through all activatible Abilities
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
@@ -113,6 +115,7 @@ void URPGAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 {
 	if (!InputTag.IsValid()) return;
 
+	FScopedAbilityListLock ActiveScopeLock(*this);
 	// Looping through all activatible Abilities
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
@@ -178,127 +181,6 @@ void URPGAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
 }
 
 /// <summary>
-/// Returns the Ability tag from a Ability Spec
-/// </summary>
-/// <param name="AbilitySpec"></param>
-/// <returns></returns>
-FGameplayTag URPGAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
-{
-	if (AbilitySpec.Ability)
-	{
-		for (FGameplayTag AbilityTag : AbilitySpec.Ability->AbilityTags)
-		{
-			if (AbilityTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
-			{
-				return AbilityTag;
-			}
-		}
-	}
-	
-	return FGameplayTag();
-}
-
-/// <summary>
-/// Returns the Input tag from a Ability Spec
-/// </summary>
-/// <param name="AbilitySpec"></param>
-/// <returns></returns>
-FGameplayTag URPGAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
-{
-	for (FGameplayTag InputTag : AbilitySpec.DynamicAbilityTags)
-	{
-		if (InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
-		{
-			return InputTag;
-		}
-	}
-
-	return FGameplayTag();
-}
-
-/// <summary>
-/// Returns the Status tag from a Ability Spec
-/// </summary>
-/// <param name="AbilitySpec"></param>
-/// <returns></returns>
-FGameplayTag URPGAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
-{
-	for (FGameplayTag StatusTag : AbilitySpec.DynamicAbilityTags)
-	{
-		if (StatusTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities.Status"))))
-		{
-			return StatusTag;
-		}
-	}
-	return FGameplayTag();
-}
-
-FGameplayTag URPGAbilitySystemComponent::GetStatusFromAbilityTag(const FGameplayTag& AbilityTag)
-{
-	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
-	{
-		GetStatusFromSpec(*Spec);
-	}
-	return FGameplayTag();
-}
-
-FGameplayTag URPGAbilitySystemComponent::GetInputTagFromAbilityTag(const FGameplayTag& AbilityTag)
-{
-	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
-	{
-		GetInputTagFromSpec(*Spec);
-	}
-	return FGameplayTag();
-}
-
-/// <summary>
-/// Returns the Ability spec from a specified Ability Tag
-/// </summary>
-/// <param name="AbilityTag"></param>
-/// <returns></returns>
-FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& AbilityTag)
-{
-	FScopedAbilityListLock ActiveScopeLock(*this);
-
-	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
-	{
-		for (FGameplayTag Tag : AbilitySpec.Ability->AbilityTags)
-		{
-			if (Tag.MatchesTagExact(AbilityTag))
-			{
-				return &AbilitySpec;
-			}
-		}
-	}
-	return nullptr;
-}
-
-bool URPGAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription)
-{
-	if (const FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
-	{
-		if (URPGGameplayAbility* RPGAbility = Cast<URPGGameplayAbility>(AbilitySpec->Ability))
-		{
-			OutDescription = RPGAbility->GetDescription(AbilitySpec->Level);
-			OutNextLevelDescription = RPGAbility->GetNextLevelDescription(AbilitySpec->Level + 1);
-			return true;
-		}
-	}
-
-	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
-
-	if (!AbilityTag.IsValid() || AbilityTag.MatchesTagExact(FRPGGameplayTags::Get().Abilities_None))
-		OutDescription = FString();
-	
-	else
-		OutDescription = URPGGameplayAbility::GetLockedDescription(AbilityInfo->FindAbilityInfoForTag(AbilityTag).LevelRequirement);
-	
-	OutNextLevelDescription = FString();
-
-	return false;
-}
-
-/// <summary>
 /// 
 /// </summary>
 /// <param name="AttributeTag"></param>
@@ -322,7 +204,6 @@ void URPGAbilitySystemComponent::ClearSlot(FGameplayAbilitySpec* AbilitySpec)
 	const FGameplayTag& Slot = GetInputTagFromSpec(*AbilitySpec);
 
 	AbilitySpec->DynamicAbilityTags.RemoveTag(Slot);
-	MarkAbilitySpecDirty(*AbilitySpec);
 }
 
 /// <summary>
@@ -335,7 +216,7 @@ void URPGAbilitySystemComponent::ClearSlotAbilities(const FGameplayTag& Slot)
 
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
-		if (AbilityHasSlot(&AbilitySpec, Slot))
+		if (AbilityHasSlot(AbilitySpec, Slot))
 		{
 			ClearSlot(&AbilitySpec);
 		}
@@ -343,19 +224,71 @@ void URPGAbilitySystemComponent::ClearSlotAbilities(const FGameplayTag& Slot)
 }
 
 /// <summary>
-/// Iterates through Given Specs Dynamic Ability Tags and returns if an Ability Has a Slot
+/// 
 /// </summary>
-/// <param name="AbilitySpec"></param>
+/// <param name="Spec"></param>
 /// <param name="Slot"></param>
 /// <returns></returns>
-bool URPGAbilitySystemComponent::AbilityHasSlot(FGameplayAbilitySpec* AbilitySpec, const FGameplayTag& Slot)
+bool URPGAbilitySystemComponent::AbilityHasSlot(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot)
 {
-	for (FGameplayTag Tag : AbilitySpec->DynamicAbilityTags)
-	{
-		if (Tag.MatchesTagExact(Slot)) return true;
-	}
+	return Spec.DynamicAbilityTags.HasTagExact(Slot);
+}
 
-	return false;
+/// <summary>
+/// Returns wether any slot has the InputTag
+/// </summary>
+/// <param name="Spec"></param>
+/// <returns></returns>
+bool URPGAbilitySystemComponent::AbilityHasAnySlot(FGameplayAbilitySpec& Spec)
+{
+	return Spec.DynamicAbilityTags.HasTag(FGameplayTag::RequestGameplayTag(FName("InputTag")));
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Spec"></param>
+/// <returns></returns>
+bool URPGAbilitySystemComponent::IsPassiveAbility(const FGameplayAbilitySpec& Spec) const
+{
+	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+	const FGameplayTag AbilityTag = GetAbilityTagFromSpec(Spec);
+	const FRPGAbilityInfo& Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+	const FGameplayTag AbilityType = Info.AbilityType;
+
+	return AbilityType.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Type_Passive);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Slot"></param>
+/// <returns></returns>
+bool URPGAbilitySystemComponent::SlotIsEmpty(const FGameplayTag& Slot)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilityHasSlot(AbilitySpec, Slot))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Spec"></param>
+/// <param name="Slot"></param>
+void URPGAbilitySystemComponent::AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot)
+{
+	// Clear the slot
+	ClearSlot(&Spec);
+
+	// Add the new slot
+	Spec.DynamicAbilityTags.AddTag(Slot);
 }
 
 /// <summary>
@@ -376,21 +309,43 @@ void URPGAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamepl
 
 		if (bStatusValid)
 		{
-			// Remove this InputTag (Slot) from any Ability that has it
-			ClearSlotAbilities(Slot);
-			
-			// Clear this ability's slot, just in case its a different slot
-			ClearSlot(AbilitySpec);
+			// Handle activation/deactivation for passive abilities
 
-			// Now, assign this ability to this slot
-			AbilitySpec->DynamicAbilityTags.AddTag(Slot);
-
-			if (Status.MatchesTagExact(GameplayTags.Abilities_Status_Unlocked))
+			// There is an ability in this slot. Deactivate and clear this slot
+			if (!SlotIsEmpty(Slot)) 
 			{
-				// Removes Unlocked tag and Adds Equipped Tag
-				AbilitySpec->DynamicAbilityTags.RemoveTag(GameplayTags.Abilities_Status_Unlocked);
-				AbilitySpec->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Equipped);
+				FGameplayAbilitySpec* SpecWithSlot = GetSpecFromSlot(Slot);
+				if (SpecWithSlot)
+				{
+					// If the ability already exists in this slot, if so clean up and return
+					if (AbilityTag.MatchesTagExact(GetAbilityTagFromSpec(*SpecWithSlot)))
+					{
+						ClientEquipAbility(AbilityTag, GameplayTags.Abilities_Status_Equipped, Slot, PreviousSlot);
+						return;
+					}
+
+					// If the ability is a passive ability
+					if (IsPassiveAbility(*SpecWithSlot))
+					{
+						MulticastActivatePassiveEffect(GetAbilityTagFromSpec(*SpecWithSlot), false);
+						DeactivatePassiveAbilityDelegate.Broadcast(GetAbilityTagFromSpec(*SpecWithSlot));
+					}
+
+					ClearSlot(SpecWithSlot);
+				}
 			}
+
+			// Ability doesnt have a slot (Its Not Active)
+			if (!AbilityHasAnySlot(*AbilitySpec))
+			{
+				if (IsPassiveAbility(*AbilitySpec))
+				{
+					TryActivateAbility(AbilitySpec->Handle);
+					MulticastActivatePassiveEffect(AbilityTag, true);
+				}
+			}
+
+			AssignSlotToAbility(*AbilitySpec, Slot);
 
 			MarkAbilitySpecDirty(*AbilitySpec);
 		}
@@ -458,6 +413,16 @@ void URPGAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGa
 /// <summary>
 /// 
 /// </summary>
+/// <param name="AbilityTag"></param>
+/// <param name="bActivate"></param>
+void URPGAbilitySystemComponent::MulticastActivatePassiveEffect_Implementation(const FGameplayTag& AbilityTag, bool bActivate)
+{
+	ActivatePassiveEffectDelegate.Broadcast(AbilityTag, bActivate);
+}
+
+/// <summary>
+/// 
+/// </summary>
 void URPGAbilitySystemComponent::OnRep_ActivateAbilities()
 {
 	Super::OnRep_ActivateAbilities();
@@ -503,4 +468,156 @@ void URPGAbilitySystemComponent::ClientEffectApplied_Implementation(UAbilitySyst
 	EffectSpec.GetAllAssetTags(TagContainer);
 
 	EffectAssetTags.Broadcast(TagContainer);
+}
+
+/*Getters ----------------------------------------------------------------->*/
+/// <summary>
+/// Returns the Ability tag from a Ability Spec
+/// </summary>
+/// <param name="AbilitySpec"></param>
+/// <returns></returns>
+FGameplayTag URPGAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	if (AbilitySpec.Ability)
+	{
+		for (FGameplayTag AbilityTag : AbilitySpec.Ability->AbilityTags)
+		{
+			if (AbilityTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities"))))
+			{
+				return AbilityTag;
+			}
+		}
+	}
+
+	return FGameplayTag();
+}
+
+/// <summary>
+/// Returns the Input tag from a Ability Spec
+/// </summary>
+/// <param name="AbilitySpec"></param>
+/// <returns></returns>
+FGameplayTag URPGAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag InputTag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (InputTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("InputTag"))))
+		{
+			return InputTag;
+		}
+	}
+
+	return FGameplayTag();
+}
+
+/// <summary>
+/// Returns the Status tag from a Ability Spec
+/// </summary>
+/// <param name="AbilitySpec"></param>
+/// <returns></returns>
+FGameplayTag URPGAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	for (FGameplayTag StatusTag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (StatusTag.MatchesTag(FGameplayTag::RequestGameplayTag(FName("Abilities.Status"))))
+		{
+			return StatusTag;
+		}
+	}
+	return FGameplayTag();
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <returns></returns>
+FGameplayTag URPGAbilitySystemComponent::GetStatusFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		GetStatusFromSpec(*Spec);
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag URPGAbilitySystemComponent::GetInputTagFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		GetInputTagFromSpec(*Spec);
+	}
+	return FGameplayTag();
+}
+
+/// <summary>
+/// Returns the Ability spec from a specified Ability Tag
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <returns></returns>
+FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		for (FGameplayTag Tag : AbilitySpec.Ability->AbilityTags)
+		{
+			if (Tag.MatchesTagExact(AbilityTag))
+			{
+				return &AbilitySpec;
+			}
+		}
+	}
+	return nullptr;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <returns></returns>
+FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromSlot(const FGameplayTag& Slot)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (AbilitySpec.DynamicAbilityTags.HasTagExact(Slot))
+		{
+			return &AbilitySpec;
+		}
+	}
+	return nullptr;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <param name="OutDescription"></param>
+/// <param name="OutNextLevelDescription"></param>
+/// <returns></returns>
+bool URPGAbilitySystemComponent::GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription)
+{
+	if (const FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		if (URPGGameplayAbility* RPGAbility = Cast<URPGGameplayAbility>(AbilitySpec->Ability))
+		{
+			OutDescription = RPGAbility->GetDescription(AbilitySpec->Level);
+			OutNextLevelDescription = RPGAbility->GetNextLevelDescription(AbilitySpec->Level + 1);
+			return true;
+		}
+	}
+
+	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
+
+	if (!AbilityTag.IsValid() || AbilityTag.MatchesTagExact(FRPGGameplayTags::Get().Abilities_None))
+		OutDescription = FString();
+
+	else
+		OutDescription = URPGGameplayAbility::GetLockedDescription(AbilityInfo->FindAbilityInfoForTag(AbilityTag).LevelRequirement);
+
+	OutNextLevelDescription = FString();
+
+	return false;
 }

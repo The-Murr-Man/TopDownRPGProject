@@ -23,6 +23,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void StoreOwnerVariables();
+
+	UFUNCTION(BlueprintCallable)
+	void TraceFirstTarget(const FVector& BeamTargetLocation);
+
+	UFUNCTION(BlueprintCallable)
+	void StoreAdditionalTargets(TArray<AActor*>& OutAdditionalTargets);
+
 protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Beam")
@@ -36,4 +43,16 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Beam")
 	TObjectPtr<ACharacter> OwnerCharacter;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Beam")
+	FName WeaponSocketName = "TipSocket";
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Beam")
+	float BeamChainRadius = 850;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Beam")
+	float MaxBeamLength = 850;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Beam")
+	float MaxNumShockTargets = 5;
 };

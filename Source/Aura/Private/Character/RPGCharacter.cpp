@@ -11,6 +11,8 @@
 #include "NiagaraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "RPGGameplayTags.h"
+#include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
 
 /// <summary>
 /// 
@@ -73,6 +75,7 @@ void ARPGCharacter::InitAbilityActorInfo()
 	AttributeSet = RpgPlayerState->GetAttributeSet();
 
 	OnASCRegistered.Broadcast(AbilitySystemComponent);
+	AbilitySystemComponent->RegisterGameplayTagEvent(FRPGGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ARPGCharacter::StunTagChanged);
 
 	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
 	{
@@ -94,6 +97,47 @@ void ARPGCharacter::OnRep_PlayerState()
 
 	// Init ability actor info for the client
 	InitAbilityActorInfo();
+}
+
+/// <summary>
+/// 
+/// </summary>
+void ARPGCharacter::OnRep_Stunned()
+{
+	if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
+		FGameplayTagContainer BlockedTags;
+		BlockedTags.AddTag(GameplayTags.Player_Block_CursorTrace);
+		BlockedTags.AddTag(GameplayTags.Player_Block_InputHeld);
+		BlockedTags.AddTag(GameplayTags.Player_Block_InputPressed);
+		BlockedTags.AddTag(GameplayTags.Player_Block_InputReleased);
+
+		if (bIsStunned)
+		{
+			RPGASC->AddLooseGameplayTags(BlockedTags);
+			StunDebuffComponent->Activate();
+		}
+
+		else
+		{
+			RPGASC->RemoveLooseGameplayTags(BlockedTags);
+			StunDebuffComponent->Deactivate();
+		}
+	}
+}
+
+void ARPGCharacter::OnRep_Burned()
+{
+	if (bIsBurned)
+	{
+		BurnDebuffComponent->Activate();
+	}
+
+	else
+	{
+		BurnDebuffComponent->Deactivate();
+	}
 }
 
 /// <summary>

@@ -224,8 +224,10 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// If crit hit scale damage by double and add SourceCriticalHitDamage
 	Damage = bCriticalHit ? 2 * Damage + SourceCriticalHitDamage : Damage;
 
+	// Makes sure damage is at least 1
+	float FinalDamage = FMath::Max(Damage,1);
 
-	const FGameplayModifierEvaluatedData EvaluatedData(URPGAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, Damage);
+	const FGameplayModifierEvaluatedData EvaluatedData(URPGAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, FinalDamage);
 
 	// Adding Evaluated data to output
 	OutExecutionOutput.AddOutputModifier(EvaluatedData);

@@ -59,7 +59,7 @@ public:
 	FGameplayTag Player_Block_InputPressed;
 	FGameplayTag Player_Block_InputHeld;
 	FGameplayTag Player_Block_InputReleased;
-	FGameplayTag Player_Block_CurserTrace;
+	FGameplayTag Player_Block_CursorTrace;
 	/*Player Tags End <-*
 
 	/*Damage Type Tags ->*/
@@ -105,6 +105,12 @@ public:
 	FGameplayTag Abilities_Lightning_Electrocute;
 	FGameplayTag Abilities_HitReact;
 	/*Ability Tags <-*/
+
+	/*Passive Ability Tags ->*/
+	FGameplayTag Abilities_Passive_HaloOfProtection;
+	FGameplayTag Abilities_Passive_LifeSiphon;
+	FGameplayTag Abilities_Passive_ManaSiphon;
+	/*Passive Ability Tags <-*/
 
 	/*Ability Status Tags ->*/
 	FGameplayTag Abilities_Status_Locked;

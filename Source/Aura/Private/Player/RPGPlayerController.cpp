@@ -90,7 +90,7 @@ void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, A
 void ARPGPlayerController::CursorTrace()
 {
 	// If blocking cursor trace clear highlight target and return
-	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_CurserTrace))
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_CursorTrace))
 	{
 		if (LastActor) LastActor->UnHighlightActor();
 		if (ThisActor) ThisActor->UnHighlightActor();

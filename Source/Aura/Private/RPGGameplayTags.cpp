@@ -14,7 +14,6 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Attributes_Primary_Resilience = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Primary.Resilience"), FString("Increases Armor and Armor Penetration"));
 	GameplayTags.Attributes_Primary_Vigor = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Primary.Vigor"), FString("Increases Health"));
 	//Primary Attributes End <-
-	
 
 	/*Adding Secondary Attributes To Gameplay Tags Manager->*/
 	GameplayTags.Attributes_Secondary_MaxHealth = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Secondary.MaxHealth"), FString("Maximum amount of Health obtainable"));
@@ -49,7 +48,7 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Player_Block_InputPressed = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.Pressed"), FString("Blocks Tags While InputPressed"));
 	GameplayTags.Player_Block_InputHeld = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.Held"), FString("Blocks Tags While InputHeld"));
 	GameplayTags.Player_Block_InputReleased = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.Released"), FString("Blocks Tags While InputReleased"));
-	GameplayTags.Player_Block_CurserTrace = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.CurserTrace"), FString("Blocks Tags While CurserTacing"));
+	GameplayTags.Player_Block_CursorTrace = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.CursorTrace"), FString("Blocks Tags While CurserTacing"));
 	//Player Tags End <-
 
 	/*Adding Damage Type Tags To Gameplay Tags Manager->*/
@@ -107,6 +106,12 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Abilities_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.HitReact"), FString("Ability for reacting to being hit"));
 	//Ability Tags End <-
 	
+	/*Adding Passive Ability Tags To Gameplay Tags Manager->*/
+	GameplayTags.Abilities_Passive_HaloOfProtection = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Passive.HaloOfProtection"), FString("Halo Of Protection Passive Ability Tag"));
+	GameplayTags.Abilities_Passive_LifeSiphon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Passive.LifeSiphon"), FString("Life Siphon Passive Ability Tag"));
+	GameplayTags.Abilities_Passive_ManaSiphon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Passive.ManaSiphon"), FString("Mana Siphon Passive Ability Tag"));
+	//Passive Ability Tags End <-
+
 	/*Adding Ability Status Tags To Gameplay Tags Manager->*/
 	GameplayTags.Abilities_Status_Locked = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Status.Locked"), FString("Locked Status Ability Tag"));
 	GameplayTags.Abilities_Status_Eligible = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Status.Eligible"), FString("Eligible Status Ability Tag"));

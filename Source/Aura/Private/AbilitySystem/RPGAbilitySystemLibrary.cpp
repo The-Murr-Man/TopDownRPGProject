@@ -181,7 +181,6 @@ TArray<FGameplayTag> URPGAbilitySystemLibrary::CallerMagnitudeTags(TSubclassOf<U
 	return CallerTags;
 }
 
-
 /// <summary>
 /// 
 /// </summary>
@@ -468,6 +467,36 @@ void URPGAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* WorldCo
 				OutOverlappingActors.AddUnique(ICombatInterface::Execute_GetAvatar(Overlap.GetActor()));
 			}
 		}
+	}
+}
+
+void URPGAbilitySystemLibrary::GetClosestTargets(int32 MaxTargets, const TArray<AActor*>& Actors, TArray<AActor*>& OutClosestTargets, const FVector& Origin)
+{
+	//Check if MaxTargets or Actors and return
+	if (MaxTargets == 0 || Actors.IsEmpty()) return;
+
+	// Local array for sorted actors
+	TArray<AActor*> SortedActors = Actors;
+
+	// Check if sorted actors is leass than MaxTargets
+	if (SortedActors.Num() <= MaxTargets)
+	{
+		OutClosestTargets = SortedActors;
+	}
+
+	// Sort the actirs based of thier distance from the origin
+	Algo::Sort(SortedActors, [Origin](const AActor* ActorA, const AActor* ActorB)
+		{
+			const float DistanceA = FVector::DistSquared(ActorA->GetActorLocation(), Origin);
+			const float DistanceB = FVector::DistSquared(ActorB->GetActorLocation(), Origin);
+			return DistanceA < DistanceB;
+		});
+
+	// Return the first elements of SortedActors up to max targets
+	int32 Size = FMath::Min(MaxTargets, SortedActors.Num());
+	for (int32 i = 0; i < Size; i++)
+	{
+		OutClosestTargets.Add(SortedActors[i]);
 	}
 }
 

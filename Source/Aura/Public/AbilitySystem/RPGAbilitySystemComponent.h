@@ -11,6 +11,9 @@ DECLARE_MULTICAST_DELEGATE(FAbilitiesGiven);
 DECLARE_DELEGATE_OneParam(FForEachAbility, const FGameplayAbilitySpec&)
 DECLARE_MULTICAST_DELEGATE_ThreeParams(FAbilityStatusChanged, const FGameplayTag& /*Ability Tag*/, const FGameplayTag& /*Status Tag*/, int32 /*Ability Level*/);
 DECLARE_MULTICAST_DELEGATE_FourParams(FAbilityEquipped, const FGameplayTag& /*Ability Tag*/, const FGameplayTag& /*Status Tag*/, const FGameplayTag& /*Slot*/, const FGameplayTag& /*PrevSlot*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FDeactivatePassiveAbility, const FGameplayTag&/*Ability Tag*/);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FActivatePassiveEffect, const FGameplayTag&/*Ability Tag*/, bool /*bActivate*/);
+
 /**
  * 
  */
@@ -25,6 +28,8 @@ public:
 	FAbilitiesGiven AbilitiesGivenDelegate;
 	FAbilityStatusChanged AbilityStatusChangedDelegate;
 	FAbilityEquipped AbilityEquippedDelegate;
+	FDeactivatePassiveAbility DeactivatePassiveAbilityDelegate;
+	FActivatePassiveEffect ActivatePassiveEffectDelegate;
 
 	bool bStartupAbilitiesGiven = false;
 
@@ -44,13 +49,18 @@ public:
 	FGameplayTag GetStatusFromAbilityTag(const FGameplayTag& AbilityTag);
 	FGameplayTag GetInputTagFromAbilityTag(const FGameplayTag& AbilityTag);
 	FGameplayAbilitySpec* GetSpecFromAbilityTag(const FGameplayTag& AbilityTag);
+	FGameplayAbilitySpec* GetSpecFromSlot(const FGameplayTag& Slot);
 
+	bool IsPassiveAbility(const FGameplayAbilitySpec& Spec) const;
 	bool GetDescriptionsByAbilityTag(const FGameplayTag& AbilityTag, FString& OutDescription, FString& OutNextLevelDescription);
 	void UpgradeAttribute(const FGameplayTag& AttributeTag);
 
 	void ClearSlot(FGameplayAbilitySpec* AbilitySpec);
 	void ClearSlotAbilities(const FGameplayTag& Slot);
-	static bool AbilityHasSlot(FGameplayAbilitySpec* AbilitySpec, const FGameplayTag& Slot);
+	static bool AbilityHasSlot(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot);
+	static bool AbilityHasAnySlot(FGameplayAbilitySpec& Spec);
+	bool SlotIsEmpty(const FGameplayTag& Slot);
+	void AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot);
 
 	//Server RPC's
 	UFUNCTION(Server,Reliable)
@@ -61,6 +71,9 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipAbility(const FGameplayTag& AbilityTag, const FGameplayTag& Slot);
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastActivatePassiveEffect(const FGameplayTag& AbilityTag, bool bActivate);
 
 protected:
 

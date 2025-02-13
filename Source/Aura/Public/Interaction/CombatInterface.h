@@ -63,10 +63,17 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void SetInShockLoop(bool bInLoop);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void SetIsBeingShocked(bool bInLoop);
+
 	UFUNCTION(BlueprintCallable,BlueprintNativeEvent)
 	UAnimMontage* GetHitReactMontage();
 
-	virtual void Die(const FVector& DeathImpulse) = 0;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool IsInShockLoop() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	bool IsBeingShocked() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	bool IsDead() const;
@@ -92,7 +99,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	ECharacterClass GetCharacterClass();
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	USkeletalMeshComponent* GetWeaponMesh();
+
 	// Pure Virtual
-	virtual FOnASCRegistered GetOnASCRegisteredDelegate() = 0;
-	virtual FOnDeath GetOnDeathDelegate() = 0;
+	virtual FOnASCRegistered& GetOnASCRegisteredDelegate() = 0;
+	virtual FOnDeath& GetOnDeathDelegate() = 0;
+	virtual void Die(const FVector& DeathImpulse) = 0;
 };

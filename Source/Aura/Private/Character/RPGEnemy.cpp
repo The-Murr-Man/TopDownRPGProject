@@ -9,10 +9,10 @@
 #include "UI/Widget/RPGUserWidget.h"
 #include "AbilitySystem/RPGAbilitySystemLibrary.h"
 #include "RPGGameplayTags.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "AI/RPGAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 ARPGEnemy::ARPGEnemy()
 {
@@ -32,6 +32,8 @@ ARPGEnemy::ARPGEnemy()
 
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>("HealthBar");
 	HealthBar->SetupAttachment(GetRootComponent());
+
+	BaseMaxWalkSpeed = 250;
 }
 
 void ARPGEnemy::PossessedBy(AController* NewController)
@@ -93,6 +95,9 @@ void ARPGEnemy::BeginPlay()
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGEnemy::InitAbilityActorInfo()
 {
 	if (!AbilitySystemComponent) return;
@@ -100,6 +105,8 @@ void ARPGEnemy::InitAbilityActorInfo()
 	// Setting both owning and avatar actors as this actor
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<URPGAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
+
+	AbilitySystemComponent->RegisterGameplayTagEvent(FRPGGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ARPGEnemy::StunTagChanged);
 
 	if (HasAuthority())
 	{
@@ -109,11 +116,29 @@ void ARPGEnemy::InitAbilityActorInfo()
 	OnASCRegistered.Broadcast(AbilitySystemComponent);
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGEnemy::InitializeDefaultAttributes()
 {
 	URPGAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
 }
 
+void ARPGEnemy::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	Super::StunTagChanged(CallbackTag, NewCount);
+
+	if (RPGAIController && RPGAIController->GetBlackboardComponent())
+	{
+		RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("Stunned"), bIsStunned);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="CallbackTag"></param>
+/// <param name="NewCount"></param>
 void ARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	bHitReacting = NewCount > 0;
@@ -125,6 +150,9 @@ void ARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCoun
 	}
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGEnemy::HighlightActor()
 {
 	GetMesh()->SetRenderCustomDepth(true);
@@ -134,6 +162,9 @@ void ARPGEnemy::HighlightActor()
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGEnemy::UnHighlightActor()
 {
 	GetMesh()->SetRenderCustomDepth(false);

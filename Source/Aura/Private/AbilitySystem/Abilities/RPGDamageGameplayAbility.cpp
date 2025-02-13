@@ -71,3 +71,8 @@ FDamageEffectParams URPGDamageGameplayAbility::MakeDamageEffectParamsFromClassDe
 	}
 	return Params;
 }
+
+float URPGDamageGameplayAbility::GetDamageAtLevel()
+{
+	return Damage.GetValueAtLevel(GetAbilityLevel());
+}

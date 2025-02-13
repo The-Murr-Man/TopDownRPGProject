@@ -236,10 +236,14 @@ void URPGAttributeSet::HandleIncomingDamage(FEffectProperties& Props)
 
 		else
 		{
-			// Activate Ability if enemy has specific tag
-			FGameplayTagContainer TagContainer;
-			TagContainer.AddTag(FRPGGameplayTags::Get().Abilities_HitReact);
-			Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+			// If the target is not being shocked play the hit react
+			if (Props.TargetCharacter->Implements<UCombatInterface>() && !ICombatInterface::Execute_IsBeingShocked(Props.TargetCharacter))
+			{
+				// Activate Ability if enemy has specific tag
+				FGameplayTagContainer TagContainer;
+				TagContainer.AddTag(FRPGGameplayTags::Get().Abilities_HitReact);
+				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+			}
 
 			const FVector& KnockbackForce = URPGAbilitySystemLibrary::GetKnockbackForce(Props.EffectContextHandle);
 			if (KnockbackForce.Length() > 1)
@@ -281,10 +285,18 @@ void URPGAttributeSet::HandleIncomingXP(FEffectProperties& Props)
 
 		if (NumLevelUps > 0)
 		{
-			const int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, CurrentLevel);
-			const int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, CurrentLevel);
-
 			IPlayerInterface::Execute_AddToPlayerLevel(Props.SourceCharacter, NumLevelUps);
+
+			int32 AttributePointsReward = 0;
+			int32 SpellPointsReward = 0;
+
+			for (int32 i = 0; i < NumLevelUps; ++i)
+			{
+				AttributePointsReward += IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, CurrentLevel + 1);
+				SpellPointsReward += IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, CurrentLevel + 1);
+			}
+			
+
 			IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
 			IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
 
@@ -324,12 +336,26 @@ void URPGAttributeSet::HandleDebuff(FEffectProperties& Props)
 	Effect->Period = DebuffFrequency;
 	Effect->DurationMagnitude = FScalableFloat(DebuffDuration);
 
-	//Effect->InheritableOwnedTagsContainer.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
-
 	FInheritedTagContainer TagContainer = FInheritedTagContainer();
+
 	UTargetTagsGameplayEffectComponent& Component = Effect->FindOrAddComponent<UTargetTagsGameplayEffectComponent>();
-	TagContainer.Added.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
-	TagContainer.CombinedTags.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
+
+	const FGameplayTag DebuffTag = GameplayTags.DamageTypesToDebuffs[DamageType];
+
+	TagContainer.Added.AddTag(DebuffTag);
+
+	// Check if Debuff tag is stun
+	if (DebuffTag.MatchesTagExact(GameplayTags.Debuff_Stun))
+	{
+		TagContainer.Added.AddTag(GameplayTags.Player_Block_CursorTrace);
+
+		TagContainer.Added.AddTag(GameplayTags.Player_Block_InputHeld);
+
+		TagContainer.Added.AddTag(GameplayTags.Player_Block_InputPressed);
+
+		TagContainer.Added.AddTag(GameplayTags.Player_Block_InputReleased);
+	}
+
 	Component.SetAndApplyTargetTagChanges(TagContainer);
 
 	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
