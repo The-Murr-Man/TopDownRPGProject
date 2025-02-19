@@ -198,6 +198,13 @@ FGameplayEffectContextHandle URPGAbilitySystemLibrary::ApplyDamageEffect(const F
 
 	SetKnockbackForce(EffectContextHandle, DamageEffectParams.KnockbackForce);
 
+	SetIsRadialDamage(EffectContextHandle, DamageEffectParams.bIsRadialDamage);
+	
+	// Dont need to worry about checking if bIsRadialDamage, Check happends in Effect Context
+	SetRadialDamageInnerRadius(EffectContextHandle, DamageEffectParams.RadialDamageInnerRadius);
+	SetRadialDamageOuterRadius(EffectContextHandle, DamageEffectParams.RadialDamageOuterRadius);
+	SetRadialDamageOrigin(EffectContextHandle, DamageEffectParams.RadialDamageOrigin);
+
 	FGameplayEffectSpecHandle SpecHandle = DamageEffectParams.SourceAbilitySystemComponent->MakeOutgoingSpec(DamageEffectParams.DamageGameplayEffectClass, DamageEffectParams.AbilityLevel, EffectContextHandle);
 
 	// Sets the Damage SetByCallerMagnitude
@@ -278,6 +285,44 @@ TArray<FVector> URPGAbilitySystemLibrary::EvenlyRotatedVectors(const FVector& Fo
 	}
 
 	return Vectors;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <param name="Damage"></param>
+/// <param name="TargetAvatar"></param>
+/// <returns></returns>
+float URPGAbilitySystemLibrary::CalculateRadialDamage(const FGameplayEffectContextHandle& EffectContextHandle, const float Damage, const AActor* TargetAvatar)
+{
+	// Get the location of target
+	FVector TargetLocation = TargetAvatar->GetActorLocation();
+
+	// Get the origin of target
+	const FVector Origin = URPGAbilitySystemLibrary::GetRadialDamageOrigin(EffectContextHandle);
+
+	TargetLocation.Z = Origin.Z; // TargetAvatar halfheight may be above the InnerRadius
+	
+	// Calculate Sqr distance between Target location and origin
+	const float SquareDistance = FVector::DistSquared(TargetLocation, Origin);
+
+	// Get Sqr Inner Radius
+	const float SquareInnerRadius = FMath::Square(URPGAbilitySystemLibrary::GetRadialDamageInnerRadius(EffectContextHandle));
+
+	// Get Sqr Outer Radius
+	const float SquareOuterRadius = FMath::Square(URPGAbilitySystemLibrary::GetRadialDamageOuterRadius(EffectContextHandle));
+
+	if (SquareDistance <= SquareInnerRadius) return Damage;
+
+	// Calculate Damage 
+	const TRange<float> DistanceRange(SquareInnerRadius, SquareOuterRadius);
+	const TRange<float> DamageScaleRange(1.0f, 0.f);
+	const float DamageScale = FMath::GetMappedRangeValueClamped(DistanceRange, DamageScaleRange, SquareDistance);
+
+	const float RadialDamage = Damage * DamageScale;
+
+	return RadialDamage;
 }
 
 /*Setters ------------------------------------------------------------->*/
@@ -362,6 +407,38 @@ void URPGAbilitySystemLibrary::SetKnockbackForce(UPARAM(ref)FGameplayEffectConte
 	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return RPGContext->SetDeathImpulse(InKnockbackForce);
+	}
+}
+
+void URPGAbilitySystemLibrary::SetIsRadialDamage(UPARAM(ref)FGameplayEffectContextHandle& EffectContextHandle, bool bInIsRadialDamage)
+{
+	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->SetIsRadialDamage(bInIsRadialDamage);
+	}
+}
+
+void URPGAbilitySystemLibrary::SetRadialDamageInnerRadius(UPARAM(ref)FGameplayEffectContextHandle& EffectContextHandle, float InRadialDamageInnerRadius)
+{
+	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->SetRadialDamageInnerRadius(InRadialDamageInnerRadius);
+	}
+}
+
+void URPGAbilitySystemLibrary::SetRadialDamageOuterRadius(UPARAM(ref)FGameplayEffectContextHandle& EffectContextHandle, float InRadialDamageOuterRadius)
+{
+	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->SetRadialDamageOuterRadius(InRadialDamageOuterRadius);
+	}
+}
+
+void URPGAbilitySystemLibrary::SetRadialDamageOrigin(UPARAM(ref)FGameplayEffectContextHandle& EffectContextHandle, FVector InRadialDamageOrigin)
+{
+	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->SetRadialDamageOrigin(InRadialDamageOrigin);
 	}
 }
 
@@ -621,6 +698,43 @@ FVector URPGAbilitySystemLibrary::GetKnockbackForce(const FGameplayEffectContext
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return RPGContext->GetKnockbackForce();
+	}
+
+	return FVector::ZeroVector;
+}
+
+bool URPGAbilitySystemLibrary::IsRadialDamage(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->IsRadialDamage();
+	}
+	return false;
+}
+
+float URPGAbilitySystemLibrary::GetRadialDamageInnerRadius(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->GetRadialDamageInnerRadius();
+	}
+	return 0.0f;
+}
+
+float URPGAbilitySystemLibrary::GetRadialDamageOuterRadius(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->GetRadialDamageOuterRadius();
+	}
+	return 0.0f;
+}
+
+FVector URPGAbilitySystemLibrary::GetRadialDamageOrigin(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return RPGContext->GetRadialDamageOrigin();
 	}
 
 	return FVector::ZeroVector;

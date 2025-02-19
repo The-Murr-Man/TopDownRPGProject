@@ -65,4 +65,17 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Damage|Debuff")
 	float DebuffDuration = 5;
+
+	//
+	UPROPERTY(EditDefaultsOnly, Category = "Damage|Radial")
+	bool bIsRadialDamage = false;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Damage|Radial")
+	float RadialDamageInnerRadius = 0;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category = "Damage|Radial")
+	float RadialDamageOuterRadius = 0;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage|Radial")
+	FVector RadialDamageOrigin = FVector::ZeroVector;
 };

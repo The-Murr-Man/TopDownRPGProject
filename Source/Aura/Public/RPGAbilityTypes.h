@@ -62,6 +62,18 @@ struct FDamageEffectParams
 
 	UPROPERTY(BlueprintReadWrite)
 	float KnockbackChance = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsRadialDamage = false;
+
+	UPROPERTY(BlueprintReadWrite)
+	float RadialDamageInnerRadius = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	float RadialDamageOuterRadius = 0;
+
+	UPROPERTY(BlueprintReadWrite)
+	FVector RadialDamageOrigin = FVector::ZeroVector;
 };
 
 /// <summary>
@@ -96,10 +108,15 @@ public: // Redundant but I like it this way
 	bool IsCriticalHit() const { return bIsCriticalHit; }
 	bool IsBlockedHit() const { return bIsBlockedlHit; }
 	bool IsSuccessfulDebuff() const { return bIsSuccessfulDebuff; }
+	bool IsRadialDamage() const { return bIsRadialDamage; }
 
 	float GetDebuffDamage() const { return DebuffDamage; }
 	float GetDebuffDuration() const { return DebuffDuration; }
 	float GetDebuffFrequency() const { return DebuffFrequency; }
+
+	float GetRadialDamageInnerRadius() const { return RadialDamageInnerRadius; }
+	float GetRadialDamageOuterRadius() const { return RadialDamageOuterRadius; }
+	FVector GetRadialDamageOrigin() const { return RadialDamageOrigin; }
 
 	TSharedPtr<FGameplayTag> GetDamageType() const { return DamageType; }
 
@@ -109,10 +126,15 @@ public: // Redundant but I like it this way
 	void SetIsCriticalHit(bool bInIsCriticalHit) { bIsCriticalHit = bInIsCriticalHit; }
 	void SetIsBlockedlHit(bool bInIsBlockedHit) { bIsBlockedlHit = bInIsBlockedHit; }
 	void SetIsSuccessfulDebuff(bool bInIsSuccessfulDebuff) { bIsSuccessfulDebuff = bInIsSuccessfulDebuff; }
+	void SetIsRadialDamage(bool bInIsRadialDamage) { bIsRadialDamage = bInIsRadialDamage; }
 
 	void SetDebuffDamage(float InDebuffDamage) { DebuffDamage = InDebuffDamage; }
 	void SetDebuffDuration(float InDebuffDuration) { DebuffDuration = InDebuffDuration; }
 	void SetDebuffFrequency(float InDebuffFrequency) { DebuffFrequency = InDebuffFrequency; }
+
+	void SetRadialDamageInnerRadius(float InRadialDamageInnerRadius)  {  RadialDamageInnerRadius = InRadialDamageInnerRadius; }
+	void SetRadialDamageOuterRadius(float InRadialDamageOuterRadius) { RadialDamageOuterRadius = InRadialDamageOuterRadius; }
+	void SetRadialDamageOrigin(FVector InRadialDamageOrigin) { RadialDamageOrigin = InRadialDamageOrigin; }
 
 	void SetDamageType(TSharedPtr<FGameplayTag> InDamageType) { DamageType = InDamageType; }
 
@@ -146,6 +168,18 @@ protected:
 	FVector KnockbackForce = FVector::ZeroVector;
 
 	TSharedPtr<FGameplayTag> DamageType;
+
+	UPROPERTY()
+	bool bIsRadialDamage = false;
+
+	UPROPERTY()
+	float RadialDamageInnerRadius = 0;
+
+	UPROPERTY()
+	float RadialDamageOuterRadius = 0;
+
+	UPROPERTY()
+	FVector RadialDamageOrigin = FVector::ZeroVector;
 };
 
 template<>

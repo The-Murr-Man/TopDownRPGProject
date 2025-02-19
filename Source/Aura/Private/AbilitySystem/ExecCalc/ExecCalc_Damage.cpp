@@ -9,6 +9,8 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "AbilitySystem/RPGAbilitySystemLibrary.h"
 #include "RPGAbilityTypes.h"
+#include "GameFramework/DamageType.h"
+#include "Kismet/GameplayStatics.h"
 
 struct RPGDamageStatics
 {
@@ -96,6 +98,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const FGameplayTagContainer* SourceTags = Spec.CapturedSourceTags.GetAggregatedTags();
 	const FGameplayTagContainer* TargetTags = Spec.CapturedTargetTags.GetAggregatedTags();
 
+	
 	// Create Evaluation Params
 	FAggregatorEvaluateParameters EvaluationParameters;
 
@@ -113,6 +116,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	{
 		TargetPlayerLevel = ICombatInterface::Execute_GetPlayerLevel(TargetAvatar);
 	}
+
+	// Getting the CharacterClassInfo from our blueprint system library
+	UCharacterClassInfo* CharacterClassInfo = URPGAbilitySystemLibrary::GetCharacterClassInfo(SourceAvatar);
 
 	FGameplayEffectContextHandle EffectContextHandle = Spec.GetContext();
 	//////////////////////////////////////////////
@@ -139,6 +145,12 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 		DamageTypeValue *= (100 - Resistance) / 100;
 		
+		// Radial Damage
+		if (URPGAbilitySystemLibrary::IsRadialDamage(EffectContextHandle))
+		{
+			DamageTypeValue = URPGAbilitySystemLibrary::CalculateRadialDamage(EffectContextHandle, DamageTypeValue, TargetAvatar);
+		}
+
 		Damage += DamageTypeValue;
 	}
 
@@ -169,8 +181,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	SourceArmorPenetration = FMath::Max<float>(SourceArmorPenetration, 0);
 	// <-
 
-	// Getting the CharacterClassInfo from our blueprint system library
-	UCharacterClassInfo* CharacterClassInfo = URPGAbilitySystemLibrary::GetCharacterClassInfo(SourceAvatar);
+	
 
 	// Get ArmorPenetrationCurve from our data asset
 	FRealCurve* ArmorPenetrationCurve = CharacterClassInfo->DamageCalculationCoefficients->FindCurve(FName("ArmorPenetration"), FString());

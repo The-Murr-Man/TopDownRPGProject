@@ -15,6 +15,8 @@
 #include "GameFramework/Character.h"
 #include "UI/Widget/DamageTextComponent.h"
 #include "NiagaraFunctionLibrary.h"
+#include "Actor/MagicCircle.h"
+#include "Aura/Aura.h"
 
 ARPGPlayerController::ARPGPlayerController()
 {
@@ -33,6 +35,8 @@ void ARPGPlayerController::PlayerTick(float DeltaTime)
 	{
 		AutoRun();
 	}
+
+	UpdateMagicCircleLocation();
 }
 
 void ARPGPlayerController::BeginPlay()
@@ -56,6 +60,47 @@ void ARPGPlayerController::BeginPlay()
 	InputModeData.SetHideCursorDuringCapture(false);
 
 	SetInputMode(InputModeData);
+}
+
+void ARPGPlayerController::SetShowMouseCursorAndForceRefresh(bool bNewValue)
+{
+	SetShowMouseCursor(bNewValue);
+	// Workaround: Force the cursor refresh by setting the mouse position to itself.
+	float XMouseLocation;
+	float YMouseLocation;
+	GetMousePosition(XMouseLocation, YMouseLocation);
+	SetMouseLocation(XMouseLocation, YMouseLocation);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="DecalMaterial"></param>
+void ARPGPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
+{
+	if (!IsValid(MagicCircle))
+	{
+		FVector MagicCircleLoc = CursorHit.ImpactPoint;
+		MagicCircle = GetWorld()->SpawnActor<AMagicCircle>(MagicCircleClass, MagicCircleLoc, FRotator::ZeroRotator);
+
+		if (DecalMaterial)
+		{
+			MagicCircle->GetMagicCircleDecal()->SetMaterial(0, DecalMaterial);
+		}
+
+		//MagicCircle->SetMagicCircleRadius(Radius);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+void ARPGPlayerController::HideMagicCircle()
+{
+	if (IsValid(MagicCircle))
+	{
+		MagicCircle->Destroy();
+	}
 }
 
 /// <summary>
@@ -100,7 +145,8 @@ void ARPGPlayerController::CursorTrace()
 		return;
 	}
 
-	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
+	const ECollisionChannel TraceChannel = IsValid(MagicCircle) ? ECC_ExcludePlayers : ECC_Visibility;
+	GetHitResultUnderCursor(TraceChannel, false, CursorHit);
 
 	if (!CursorHit.bBlockingHit) return;
 
@@ -112,6 +158,26 @@ void ARPGPlayerController::CursorTrace()
 		if (LastActor) LastActor->UnHighlightActor();
 		
 		if (ThisActor) ThisActor->HighlightActor();
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+void ARPGPlayerController::UpdateMagicCircleLocation()
+{
+	if (IsValid(MagicCircle))
+	{
+
+		if (CursorHit.bBlockingHit)
+		{
+			MagicCircle->SetActorHiddenInGame(false);
+			MagicCircle->SetActorLocation(CursorHit.ImpactPoint);
+		}
+		else
+		{
+			MagicCircle->SetActorHiddenInGame(true);
+		}
 	}
 }
 

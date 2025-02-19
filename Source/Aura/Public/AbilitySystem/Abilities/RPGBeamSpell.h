@@ -15,8 +15,6 @@ class AURA_API URPGBeamSpell : public URPGDamageGameplayAbility
 	GENERATED_BODY()
 	
 public:
-	virtual FString GetDescription(int32 Level) override;
-	virtual FString GetNextLevelDescription(int32 Level) override;
 
 	UFUNCTION(BlueprintCallable)
 	void StoreMouseDataInfo(const FHitResult& HitResult);

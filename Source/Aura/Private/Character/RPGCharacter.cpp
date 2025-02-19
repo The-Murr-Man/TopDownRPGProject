@@ -102,41 +102,29 @@ void ARPGCharacter::OnRep_PlayerState()
 /// <summary>
 /// 
 /// </summary>
-void ARPGCharacter::OnRep_Stunned()
+/// <param name="DecalMaterial"></param>
+void ARPGCharacter::ShowMagicCircle_Implementation(UMaterialInterface* DecalMaterial)
 {
-	if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent))
+	if (!IsLocallyControlled()) return;
+
+	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
 	{
-		const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
-		FGameplayTagContainer BlockedTags;
-		BlockedTags.AddTag(GameplayTags.Player_Block_CursorTrace);
-		BlockedTags.AddTag(GameplayTags.Player_Block_InputHeld);
-		BlockedTags.AddTag(GameplayTags.Player_Block_InputPressed);
-		BlockedTags.AddTag(GameplayTags.Player_Block_InputReleased);
-
-		if (bIsStunned)
-		{
-			RPGASC->AddLooseGameplayTags(BlockedTags);
-			StunDebuffComponent->Activate();
-		}
-
-		else
-		{
-			RPGASC->RemoveLooseGameplayTags(BlockedTags);
-			StunDebuffComponent->Deactivate();
-		}
+		RPGPlayerContoller->ShowMagicCircle(DecalMaterial);
+		RPGPlayerContoller->SetShowMouseCursorAndForceRefresh(false);
 	}
 }
 
-void ARPGCharacter::OnRep_Burned()
+/// <summary>
+/// 
+/// </summary>
+void ARPGCharacter::HideMagicCircle_Implementation()
 {
-	if (bIsBurned)
-	{
-		BurnDebuffComponent->Activate();
-	}
+	if (!IsLocallyControlled()) return;
 
-	else
+	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
 	{
-		BurnDebuffComponent->Deactivate();
+		RPGPlayerContoller->HideMagicCircle();
+		RPGPlayerContoller->SetShowMouseCursorAndForceRefresh(true);
 	}
 }
 
@@ -229,6 +217,47 @@ void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
 /// <summary>
 /// 
 /// </summary>
+void ARPGCharacter::OnRep_Stunned()
+{
+	if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
+		FGameplayTagContainer BlockedTags;
+		BlockedTags.AddTag(GameplayTags.Player_Block_CursorTrace);
+		BlockedTags.AddTag(GameplayTags.Player_Block_InputHeld);
+		BlockedTags.AddTag(GameplayTags.Player_Block_InputPressed);
+		BlockedTags.AddTag(GameplayTags.Player_Block_InputReleased);
+
+		if (bIsStunned)
+		{
+			RPGASC->AddLooseGameplayTags(BlockedTags);
+			StunDebuffComponent->Activate();
+		}
+
+		else
+		{
+			RPGASC->RemoveLooseGameplayTags(BlockedTags);
+			StunDebuffComponent->Deactivate();
+		}
+	}
+}
+
+void ARPGCharacter::OnRep_Burned()
+{
+	if (bIsBurned)
+	{
+		BurnDebuffComponent->Activate();
+	}
+
+	else
+	{
+		BurnDebuffComponent->Deactivate();
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
 /// <returns></returns>
 int32 ARPGCharacter::GetXP_Implementation() const
 {
@@ -297,6 +326,8 @@ int32 ARPGCharacter::FindLevelForXP_Implementation(int32 InXP) const
 
 	return RpgPlayerState->LevelUpInfo->FindLevelForXP(InXP);
 }
+
+
 
 
 

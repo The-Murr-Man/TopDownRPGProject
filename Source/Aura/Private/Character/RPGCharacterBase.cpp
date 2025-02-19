@@ -32,15 +32,18 @@ ARPGCharacterBase::ARPGCharacterBase()
 	// Setting up Capsule Comp
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetCapsuleComponent()->SetGenerateOverlapEvents(false);
+	GetCapsuleComponent()->SetReceivesDecals(false);
 
 	// Setting up Mesh Comp
 	GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 	GetMesh()->SetGenerateOverlapEvents(true);
+	GetMesh()->SetReceivesDecals(false);
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon Mesh");
 	WeaponMesh->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetReceivesDecals(false);
 
 	// Component all passive effects will attach to
 	EffectAttachComponent = CreateDefaultSubobject<USceneComponent>(TEXT("EffectAttachPoint"));
@@ -157,7 +160,6 @@ void ARPGCharacterBase::OnRep_Burned()
 {
 }
 
-
 /// <summary>
 /// 
 /// </summary>
@@ -218,6 +220,22 @@ void ARPGCharacterBase::MulticastHandleDeath_Implementation(const FVector& Death
 UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="DamageAmount"></param>
+/// <param name="DamageEvent"></param>
+/// <param name="EventInstigator"></param>
+/// <param name="DamageCauser"></param>
+/// <returns></returns>
+float ARPGCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float DamageTaken = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	OnDamageDelegate.Broadcast(DamageTaken);
+	return DamageTaken;
 }
 
 /// <summary>

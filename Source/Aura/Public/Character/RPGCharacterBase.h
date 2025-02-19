@@ -19,6 +19,7 @@ class UNiagaraSystem;
 class UDebuffNiagaraComponent;
 class UPassiveNiagaraComponent;
 
+
 UCLASS(Abstract)
 class AURA_API ARPGCharacterBase : public ACharacter, public IAbilitySystemInterface, public ICombatInterface
 {
@@ -32,6 +33,7 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
 	/** Combat Interface */
@@ -52,11 +54,13 @@ public:
 	virtual USkeletalMeshComponent* GetWeaponMesh_Implementation() override { return WeaponMesh; }
 	virtual void SetIsBeingShocked_Implementation(bool bInShock) override { bIsBeingShocked = bInShock; }
 	virtual bool IsBeingShocked_Implementation() const override { return bIsBeingShocked;}
+	virtual FOnDamageSignature& GetOnDamageDelegate() override { return OnDamageDelegate; }
 	/** Combat Interface */
 
 	FOnASCRegistered OnASCRegistered;
 	FOnDeath OnDeath;
-
+	
+	FOnDamageSignature OnDamageDelegate;
 	// Used on both server and client
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath(const FVector& DeathImpulse);

@@ -69,6 +69,9 @@ void ARPGProjectile::Destroyed()
 	Super::Destroyed();
 }
 
+/// <summary>
+/// 
+/// </summary>
 void ARPGProjectile::OnHit()
 {
 	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
@@ -81,18 +84,20 @@ void ARPGProjectile::OnHit()
 	bHit = true;
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="OverlappedComponent"></param>
+/// <param name="OtherActor"></param>
+/// <param name="OtherComp"></param>
+/// <param name="OtherBodyIndex"></param>
+/// <param name="bFromSweep"></param>
+/// <param name="SweepResult"></param>
 void ARPGProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!IsValid(DamageEffectParams.SourceAbilitySystemComponent)) return; //tested and works.
+	if (!IsValidOverlap(OtherActor)) return;
 
-	AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
-
-	if (SourceAvatarActor == OtherActor) return;
-
-	if (!URPGAbilitySystemLibrary::IsNotFriend(SourceAvatarActor, OtherActor)) return;
-
-	if (!bHit)
-		OnHit();
+	if (!bHit) OnHit();
 
 	if (HasAuthority())
 	{
@@ -123,5 +128,23 @@ void ARPGProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, A
 	else
 		bHit = true;
 
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="OtherActor"></param>
+/// <returns></returns>
+bool ARPGProjectile::IsValidOverlap(AActor* OtherActor)
+{
+	if (!IsValid(DamageEffectParams.SourceAbilitySystemComponent)) return false; //tested and works.
+
+	AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
+
+	if (SourceAvatarActor == OtherActor) return false;
+
+	if (!URPGAbilitySystemLibrary::IsNotFriend(SourceAvatarActor, OtherActor)) return false;
+
+	return true;
 }
 

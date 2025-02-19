@@ -17,6 +17,7 @@ class URPGAbilitySystemComponent;
 class USplineComponent;
 class UDamageTextComponent;
 class UNiagaraSystem;
+class AMagicCircle;
 
 /**
  * 
@@ -33,6 +34,14 @@ public:
 
 	UFUNCTION(Client,Reliable)
 	void ShowDamageNumber(float DamageAmount, ACharacter* TargetCharacter, bool bBlockedHit, bool bCriticalHit);
+
+	void SetShowMouseCursorAndForceRefresh(bool bNewValue);
+
+	UFUNCTION(BlueprintCallable)
+	void ShowMagicCircle(UMaterialInterface* DecalMaterial = nullptr);
+
+	UFUNCTION(BlueprintCallable)
+	void HideMagicCircle();
 
 protected:
 	virtual void BeginPlay() override;
@@ -56,12 +65,12 @@ private:
 
 	void CursorTrace();
 
+	void UpdateMagicCircleLocation();
+
 	UPROPERTY(EditAnywhere, Category = "Input")
 	bool bUseClickToMove = false;
 
-	// Returns Player Ability System Component
-	URPGAbilitySystemComponent* GetASC();
-
+	//Input
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputMappingContext> RPGContext;
 
@@ -73,6 +82,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<URPGInputConfig> InputConfig;
+
+	// Returns Player Ability System Component
+	URPGAbilitySystemComponent* GetASC();
 
 	UPROPERTY()
 	TObjectPtr<URPGAbilitySystemComponent> RPGAbilitySystemComponent;
@@ -102,4 +114,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<UNiagaraSystem> ClickNiagaraSystem;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AMagicCircle> MagicCircleClass;
+
+	UPROPERTY()
+	TObjectPtr<AMagicCircle> MagicCircle;
 };

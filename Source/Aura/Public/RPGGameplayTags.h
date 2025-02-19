@@ -102,6 +102,8 @@ public:
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
 	FGameplayTag Abilities_Fire_Firebolt;
+	FGameplayTag Abilities_Fire_FireBlast;
+	FGameplayTag Abilities_Arcane_ArcaneShards;
 	FGameplayTag Abilities_Lightning_Electrocute;
 	FGameplayTag Abilities_HitReact;
 	/*Ability Tags <-*/
@@ -127,7 +129,9 @@ public:
 
 	/*Cooldown Tags ->*/
 	FGameplayTag Cooldown_Fire_Firebolt;
+	FGameplayTag Cooldown_Fire_Fireblast;
 	FGameplayTag Cooldown_Lightning_Electrocute;
+	FGameplayTag Cooldown_Arcane_ArcaneShards;
 	/*Cooldown Tags <-*/
 
 	/*Combat Socket Tags ->*/
@@ -143,6 +147,10 @@ public:
 	FGameplayTag Montage_Attack_3;
 	FGameplayTag Montage_Attack_4;
 	/*Montage Tags <-*/
+
+	/*Gameplay Cue Tags ->*/
+	FGameplayTag GameplayCue_Fireblast;
+	/*Gameplay Cue Tags <-*/
 private:
 	static FRPGGameplayTags GameplayTags;
 };

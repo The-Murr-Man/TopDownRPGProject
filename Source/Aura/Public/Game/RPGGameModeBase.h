@@ -8,6 +8,10 @@
 
 class UCharacterClassInfo;
 class UAbilityInfo;
+class UMVVM_LoadSlot;
+class USaveGame;
+class ULoadScreenSaveGame;
+
 /**
  * 
  */
@@ -23,4 +27,28 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability Info")
 	TObjectPtr<UAbilityInfo> AbilityInfo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Save Game")
+	TSubclassOf<USaveGame> LoadScreenSaveGameClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game Maps")
+	TSoftObjectPtr<UWorld> DefaultMap;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game Maps")
+	FString DefaultMapName;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Game Maps")
+	TMap<FString, TSoftObjectPtr<UWorld>> GameMaps;
+
+	ULoadScreenSaveGame* GetSaveSlotData(const FString& SlotName, int32 SlotIndex) const;
+
+	void SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex);
+
+	static void DeleteSlot(const FString& SlotName, int32 SlotIndex);
+
+	void TravelToMap(UMVVM_LoadSlot* LoadSlot);
+
+protected:
+
+	virtual void BeginPlay() override;
 };
