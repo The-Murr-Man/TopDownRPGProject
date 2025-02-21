@@ -5,6 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
 #include "Interaction/CombatInterface.h"
+#include "RPGGameplayTags.h"
 
 UPassiveNiagaraComponent::UPassiveNiagaraComponent()
 {
@@ -18,6 +19,9 @@ void UPassiveNiagaraComponent::BeginPlay()
 	if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner())))
 	{
 		RPGASC->ActivatePassiveEffectDelegate.AddUObject(this, &UPassiveNiagaraComponent::OnPassiveActivate);
+		const bool bStartupAbilitiesGiven = RPGASC->bStartupAbilitiesGiven;
+
+		ActivateIfEquipped(RPGASC);
 	}
 
 	else if(ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
@@ -28,6 +32,7 @@ void UPassiveNiagaraComponent::BeginPlay()
 				if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner())))
 				{
 					RPGASC->ActivatePassiveEffectDelegate.AddUObject(this, &UPassiveNiagaraComponent::OnPassiveActivate);
+					ActivateIfEquipped(RPGASC);
 				}
 			});
 	}
@@ -50,6 +55,19 @@ void UPassiveNiagaraComponent::OnPassiveActivate(const FGameplayTag& AbilityTag,
 		else
 		{
 			Deactivate();
+		}
+	}
+}
+
+void UPassiveNiagaraComponent::ActivateIfEquipped(URPGAbilitySystemComponent* RPGASC)
+{
+	const bool bStartupAbilitiesGiven = RPGASC->bStartupAbilitiesGiven;
+
+	if (bStartupAbilitiesGiven)
+	{
+		if (RPGASC->GetStatusFromAbilityTag(PassiveSpellTag) == FRPGGameplayTags::Get().Abilities_Status_Equipped)
+		{
+			Activate();
 		}
 	}
 }

@@ -4,6 +4,7 @@
 #include "Actor/MagicCircle.h"
 #include "Components/SphereComponent.h"
 #include "Interaction/EnemyInterface.h"
+#include "Interaction/HighlightInterface.h"
 
 // Sets default values
 AMagicCircle::AMagicCircle()
@@ -39,7 +40,7 @@ void AMagicCircle::Tick(float DeltaTime)
 
 void AMagicCircle::OnTargetingBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (IEnemyInterface* Enemy = Cast<IEnemyInterface>(OtherActor))
+	if (IHighlightInterface* Enemy = Cast<IHighlightInterface>(OtherActor))
 	{
 		Enemy->HighlightActor();
 	}
@@ -47,7 +48,7 @@ void AMagicCircle::OnTargetingBeginOverlap(UPrimitiveComponent* OverlappedCompon
 
 void AMagicCircle::OnTargetingEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (IEnemyInterface* Enemy = Cast<IEnemyInterface>(OtherActor))
+	if (IHighlightInterface* Enemy = Cast<IHighlightInterface>(OtherActor))
 	{
 		Enemy->UnHighlightActor();
 	}

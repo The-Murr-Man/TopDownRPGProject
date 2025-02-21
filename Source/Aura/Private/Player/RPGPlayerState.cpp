@@ -36,13 +36,25 @@ void ARPGPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 void ARPGPlayerState::AddToLevel(int32 InLevel)
 {
 	Level += InLevel;
-	OnLevelChangedDelegate.Broadcast(Level);
+	OnLevelChangedDelegate.Broadcast(Level,true);
 }
 
-void ARPGPlayerState::SetLevel(int32 InLevel)
+void ARPGPlayerState::SetPlayerLevel(int32 InLevel)
 {
 	Level = InLevel;
-	OnLevelChangedDelegate.Broadcast(Level);
+	OnLevelChangedDelegate.Broadcast(Level,false);
+}
+
+void ARPGPlayerState::SetPlayerAttributePoints(int32 InAttributePoints)
+{
+	AttributePoints = InAttributePoints;
+	OnAttributePointsChangedDelegate.Broadcast(AttributePoints);
+}
+
+void ARPGPlayerState::SetPlayerSpellPoints(int32 InSpellPoints)
+{
+	SpellPoints = InSpellPoints;
+	OnSpellPointsChangedDelegate.Broadcast(SpellPoints);
 }
 
 void ARPGPlayerState::AddToXP(int32 InXP)
@@ -63,7 +75,7 @@ void ARPGPlayerState::AddToSpellPoints(int32 InSpellPoints)
 	OnSpellPointsChangedDelegate.Broadcast(SpellPoints);
 }
 
-void ARPGPlayerState::SetXP(int32 InXP)
+void ARPGPlayerState::SetPlayerXP(int32 InXP)
 {
 	XP = InXP;
 	OnXPChangedDelegate.Broadcast(XP);
@@ -71,7 +83,7 @@ void ARPGPlayerState::SetXP(int32 InXP)
 
 void ARPGPlayerState::OnRep_Level(int32 OldLevel)
 {
-	OnLevelChangedDelegate.Broadcast(Level);
+	OnLevelChangedDelegate.Broadcast(Level,true);
 }
 
 void ARPGPlayerState::OnRep_XP(int32 OldXP)

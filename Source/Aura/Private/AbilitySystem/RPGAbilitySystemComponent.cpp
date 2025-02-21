@@ -9,6 +9,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/RPGAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "Game/LoadScreenSaveGame.h"
+
 
 /// <summary>
 /// 
@@ -44,6 +46,42 @@ void URPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<
 /// <summary>
 /// 
 /// </summary>
+/// <param name="SaveData"></param>
+void URPGAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSaveGame* SaveData)
+{
+	for (const FSavedAbility& Data : SaveData->SavedAbilities)
+	{
+		const TSubclassOf<UGameplayAbility> LoadedAbilityClass = Data.GameplayAbility;
+
+		FGameplayAbilitySpec LoadedAbilitySpec = FGameplayAbilitySpec(LoadedAbilityClass, Data.AbilityLevel);
+
+		LoadedAbilitySpec.DynamicAbilityTags.AddTag(Data.AbilitySlot);
+		LoadedAbilitySpec.DynamicAbilityTags.AddTag(Data.AbilityStatus);
+
+		if (Data.AbilityType.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Type_Offensive))
+		{
+			GiveAbility(LoadedAbilitySpec);
+		}
+
+		else if (Data.AbilityType.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Type_Passive))
+		{
+			GiveAbility(LoadedAbilitySpec);
+
+			if (Data.AbilityStatus.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Status_Equipped))
+			{
+				TryActivateAbility(LoadedAbilitySpec.Handle);
+				MulticastActivatePassiveEffect(Data.AbilityTag, true);
+			}
+		}
+	}
+
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast();
+}
+
+/// <summary>
+/// 
+/// </summary>
 /// <param name="StartupPassiveAbilities"></param>
 void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupPassiveAbilities)
 {
@@ -51,6 +89,7 @@ void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubc
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 
+		AbilitySpec.DynamicAbilityTags.AddTag(FRPGGameplayTags::Get().Abilities_Status_Equipped);
 		GiveAbilityAndActivateOnce(AbilitySpec);
 	}
 }
@@ -334,6 +373,9 @@ void URPGAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamepl
 						DeactivatePassiveAbilityDelegate.Broadcast(GetAbilityTagFromSpec(*SpecWithSlot));
 					}
 
+					SpecWithSlot->DynamicAbilityTags.RemoveTag(GetStatusFromSpec(*SpecWithSlot));
+					SpecWithSlot->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Unlocked);
+
 					ClearSlot(SpecWithSlot);
 				}
 			}
@@ -346,10 +388,12 @@ void URPGAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamepl
 					TryActivateAbility(AbilitySpec->Handle);
 					MulticastActivatePassiveEffect(AbilityTag, true);
 				}
+
+				AbilitySpec->DynamicAbilityTags.RemoveTag(GetStatusFromSpec(*AbilitySpec));
+				AbilitySpec->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Equipped);
 			}
 
 			AssignSlotToAbility(*AbilitySpec, Slot);
-
 			MarkAbilitySpecDirty(*AbilitySpec);
 		}
 
@@ -535,11 +579,25 @@ FGameplayTag URPGAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilit
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <returns></returns>
+FGameplayTag URPGAbilitySystemComponent::GetSlotFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		return GetInputTagFromSpec(*Spec);
+	}
+	return FGameplayTag();
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <returns></returns>
 FGameplayTag URPGAbilitySystemComponent::GetStatusFromAbilityTag(const FGameplayTag& AbilityTag)
 {
 	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
 	{
-		GetStatusFromSpec(*Spec);
+		return GetStatusFromSpec(*Spec);
 	}
 	return FGameplayTag();
 }

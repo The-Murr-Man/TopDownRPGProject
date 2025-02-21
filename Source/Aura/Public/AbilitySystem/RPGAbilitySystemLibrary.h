@@ -16,6 +16,7 @@ class USpellMenuWidgetController;
 class UAbilitySystemComponent;
 struct FWidgetControllerParams;
 struct FGameplayEffectTypes;
+class ULoadScreenSaveGame;
 /**
  * 
  */
@@ -42,6 +43,9 @@ public:
 	// Ability System Startup -------------------------------------------------------------------------------------------------------->
 	UFUNCTION(BlueprintCallable, Category = "RPGAbilitySystemLibrary|CharacterClassDefaults")
 	static void InitializeDefaultAttributes(const UObject* WorldContextObject,ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC );
+
+	UFUNCTION(BlueprintCallable, Category = "RPGAbilitySystemLibrary|CharacterClassDefaults")
+	static void InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame);
 
 	UFUNCTION(BlueprintCallable, Category = "RPGAbilitySystemLibrary|CharacterClassDefaults")
 	static void GiveStartupAbilities(const UObject* WorldContextObject,UAbilitySystemComponent* ASC, ECharacterClass CharacterClass);

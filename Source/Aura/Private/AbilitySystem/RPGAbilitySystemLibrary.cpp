@@ -11,6 +11,7 @@
 #include "RPGAbilityTypes.h"
 #include "RPGGameplayTags.h"
 #include "Interaction/CombatInterface.h"
+#include "Game/LoadScreenSaveGame.h"
 
 /// <summary>
 /// 
@@ -104,6 +105,50 @@ void URPGAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldC
 	/*
 	* Handling Creating and Apply Gameplay Effect for Vital Attributes <-------------------------
 	*/
+}
+
+void URPGAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame)
+{
+	// Assign CharacterClassInfo from the GameMode
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+
+	if (!CharacterClassInfo) return;
+
+	const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
+	const AActor* SourceAvatarActor = ASC->GetAvatarActor();
+
+	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(SourceAvatarActor);
+
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->PrimaryAttributes_SetByCaller, 1, EffectContextHandle);
+
+	// Sets the Primary Attributes SetByCallerMagnitude
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Intellegence, SaveGame->IntellegenceAttribute);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Strength, SaveGame->StrengthAttribute);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Resilience, SaveGame->ResilienceAttribute);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Attributes_Primary_Vigor, SaveGame->VigorAttribute);
+
+	ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+
+	// Secondary Attributes
+	FGameplayEffectContextHandle SecondaryAttributesContexHandle = ASC->MakeEffectContext();
+	SecondaryAttributesContexHandle.AddSourceObject(SourceAvatarActor);
+
+	// Spec Handle for SecondaryAttributes
+	FGameplayEffectSpecHandle SecondaryAttributesSpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->SecondaryAttributes_Infinite, 1, SecondaryAttributesContexHandle);
+
+	// Apply SecondaryAttributes to self
+	ASC->ApplyGameplayEffectSpecToSelf(*SecondaryAttributesSpecHandle.Data.Get());
+
+	// Vital Attributes
+	FGameplayEffectContextHandle VitalAttributesContexHandle = ASC->MakeEffectContext();
+	VitalAttributesContexHandle.AddSourceObject(SourceAvatarActor);
+
+	// Spec Handle for VitalAttributes
+	FGameplayEffectSpecHandle VitalAttributesSpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->VitalAttributes, 1, VitalAttributesContexHandle);
+
+	// Apply VitalAttributes to self
+	ASC->ApplyGameplayEffectSpecToSelf(*VitalAttributesSpecHandle.Data.Get());
 }
 
 /// <summary>

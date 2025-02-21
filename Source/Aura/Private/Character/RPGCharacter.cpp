@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/RPGPlayerState.h"
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
+#include "AbilitySystem/RPGAbilitySystemLibrary.h"
 #include "Player/RPGPlayerController.h"
 #include "UI/HUD/RPGHUD.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
@@ -13,6 +14,11 @@
 #include "Camera/CameraComponent.h"
 #include "RPGGameplayTags.h"
 #include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
+#include "Game/RPGGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Game/RPGGameInstance.h"
+#include "Game/LoadScreenSaveGame.h"
+#include "AbilitySystem/RPGAttributeSet.h"
 
 /// <summary>
 /// 
@@ -55,7 +61,54 @@ void ARPGCharacter::PossessedBy(AController* NewController)
 
 	// Init ability actor info for the server
 	InitAbilityActorInfo();
-	AddCharacterAbilities();
+
+	// Load Save Data
+	LoadProgress();
+
+	if (ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		RPGGameMode->LoadWorldState(GetWorld());
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+void ARPGCharacter::LoadProgress()
+{
+	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
+
+	if (!IsValid(RPGGameMode)) return;
+
+	// Gets the save data from the game mode
+	ULoadScreenSaveGame* SaveData = RPGGameMode->RetreiveInGameSaveData();
+
+	//if (!SaveData) return;
+
+	if (SaveData->bFirstTimeLoadIn)
+	{
+		InitializeDefaultAttributes();
+		AddCharacterAbilities();
+	}
+
+	else
+	{
+		if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent))
+		{
+			RPGASC->AddCharacterAbilitiesFromSaveData(SaveData);
+		}
+		
+		if (ARPGPlayerState* RPGPlayerState = Cast<ARPGPlayerState>(GetPlayerState()))
+		{
+			// Saving data from the player state
+			RPGPlayerState->SetPlayerLevel(SaveData->PlayerLevel);
+			RPGPlayerState->SetPlayerXP(SaveData->XP);
+			RPGPlayerState->SetPlayerSpellPoints(SaveData->SpellPoints);
+			RPGPlayerState->SetPlayerAttributePoints(SaveData->AttributePoints);
+		}
+
+		URPGAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(this, AbilitySystemComponent, SaveData);
+	}
 }
 
 /// <summary>
@@ -85,7 +138,7 @@ void ARPGCharacter::InitAbilityActorInfo()
 		}
 	}
 
-	InitializeDefaultAttributes();
+	//InitializeDefaultAttributes();
 }
 
 /// <summary>
@@ -126,6 +179,76 @@ void ARPGCharacter::HideMagicCircle_Implementation()
 		RPGPlayerContoller->HideMagicCircle();
 		RPGPlayerContoller->SetShowMouseCursorAndForceRefresh(true);
 	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="CheckpointTag"></param>
+void ARPGCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
+{
+	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
+	
+	if (!IsValid(RPGGameMode)) return;
+
+	// Gets the save data from the game mode
+	ULoadScreenSaveGame* SaveData = RPGGameMode->RetreiveInGameSaveData();
+
+	if (!SaveData) return;
+
+	SaveData->PlayerStartTag = CheckpointTag;
+	
+	if (ARPGPlayerState* RPGPlayerState = Cast<ARPGPlayerState>(GetPlayerState()))
+	{
+		// Saving data from the player state
+		SaveData->PlayerLevel = RPGPlayerState->GetPlayerLevel();
+		SaveData->XP = RPGPlayerState->GetPlayerXP();
+		SaveData->SpellPoints = RPGPlayerState->GetPlayerSpellPoints();
+		SaveData->AttributePoints = RPGPlayerState->GetPlayerAttributePoints();
+	}
+
+	//Saving our vital attributes (All other attributes are based on the vital attribute so no need to save them)
+	SaveData->StrengthAttribute = URPGAttributeSet::GetStrengthAttribute().GetNumericValue(GetAttributeSet());
+	SaveData->IntellegenceAttribute = URPGAttributeSet::GetIntellegenceAttribute().GetNumericValue(GetAttributeSet());
+	SaveData->ResilienceAttribute = URPGAttributeSet::GetResilienceAttribute().GetNumericValue(GetAttributeSet());
+	SaveData->VigorAttribute = URPGAttributeSet::GetVigorAttribute().GetNumericValue(GetAttributeSet());
+
+	SaveData->bFirstTimeLoadIn = false;
+
+	if (!HasAuthority()) return;
+
+	URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent);
+
+	FForEachAbility SaveAbilityDelegate;
+
+	// Empty out the array
+	SaveData->SavedAbilities.Empty();
+
+	SaveAbilityDelegate.BindLambda([this, RPGASC, SaveData](const FGameplayAbilitySpec& AbilitySpec)
+	{
+		const FGameplayTag AbilityTag = RPGASC->GetAbilityTagFromSpec(AbilitySpec);
+
+		UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(this);
+
+		FRPGAbilityInfo RPGInfo = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+
+		FSavedAbility SavedAbility;
+		
+		SavedAbility.GameplayAbility = RPGInfo.Ability;
+		SavedAbility.AbilityLevel = AbilitySpec.Level;
+		SavedAbility.AbilitySlot = RPGASC->GetSlotFromAbilityTag(AbilityTag);
+		SavedAbility.AbilityStatus = RPGASC->GetStatusFromAbilityTag(AbilityTag);
+		SavedAbility.AbilityTag = AbilityTag;
+		SavedAbility.AbilityType = RPGInfo.AbilityType;
+		SaveData->SavedAbilities.AddUnique(SavedAbility);
+	});
+
+	// Broadcasts the SaveAbilityDelegate for each ability in our ability array
+	RPGASC->ForEachAbility(SaveAbilityDelegate);
+
+
+	// Sends our save data to the game mode which saves the progress
+	RPGGameMode->SaveInGameProgressData(SaveData);
 }
 
 /// <summary>

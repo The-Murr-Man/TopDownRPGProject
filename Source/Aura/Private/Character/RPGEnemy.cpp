@@ -17,7 +17,7 @@
 ARPGEnemy::ARPGEnemy()
 {
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
-
+	
 	AbilitySystemComponent = CreateDefaultSubobject<URPGAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
@@ -32,6 +32,12 @@ ARPGEnemy::ARPGEnemy()
 
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>("HealthBar");
 	HealthBar->SetupAttachment(GetRootComponent());
+
+	GetMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
+	GetMesh()->MarkRenderStateDirty();
+
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
+	WeaponMesh->MarkRenderStateDirty();
 
 	BaseMaxWalkSpeed = 250;
 }
@@ -153,22 +159,24 @@ void ARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCoun
 /// <summary>
 /// 
 /// </summary>
-void ARPGEnemy::HighlightActor()
+void ARPGEnemy::HighlightActor_Implementation()
 {
 	GetMesh()->SetRenderCustomDepth(true);
-	GetMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
-
 	WeaponMesh->SetRenderCustomDepth(true);
-	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_RED);
 }
 
 /// <summary>
 /// 
 /// </summary>
-void ARPGEnemy::UnHighlightActor()
+void ARPGEnemy::UnHighlightActor_Implementation()
 {
 	GetMesh()->SetRenderCustomDepth(false);
 	WeaponMesh->SetRenderCustomDepth(false);
+}
+
+void ARPGEnemy::SetMoveToLocation_Implementation(FVector& OutLocation)
+{
+	// Do not change out Destination
 }
 
 void ARPGEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)

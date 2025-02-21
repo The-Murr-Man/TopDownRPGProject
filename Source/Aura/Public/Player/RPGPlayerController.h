@@ -18,6 +18,15 @@ class USplineComponent;
 class UDamageTextComponent;
 class UNiagaraSystem;
 class AMagicCircle;
+class IHighlightInterface;
+
+
+enum class ETargetingStatus : uint8
+{
+	TargetingEnemy,
+	TargetingNonEnemy,
+	NotTargeting
+};
 
 /**
  * 
@@ -64,6 +73,8 @@ private:
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 
 	void CursorTrace();
+	static void HighlightActor(AActor* InActor);
+	static void UnHighlightActor(AActor* InActor);
 
 	void UpdateMagicCircleLocation();
 
@@ -89,8 +100,8 @@ private:
 	UPROPERTY()
 	TObjectPtr<URPGAbilitySystemComponent> RPGAbilitySystemComponent;
 
-	TScriptInterface<IEnemyInterface> LastActor;
-	TScriptInterface<IEnemyInterface> ThisActor;
+	TObjectPtr<AActor> LastActor;
+	TObjectPtr<AActor> ThisActor;
 
 	FHitResult CursorHit;
 
@@ -104,7 +115,8 @@ private:
 	float FollowTime = 0;
 	float ShortPressThreshold = 0.5f;
 	bool bAutoRunning = false;
-	bool bTargeting = false;
+
+	ETargetingStatus TargetingStatus = ETargetingStatus::NotTargeting;
 
 	UPROPERTY(EditDefaultsOnly)
 	float AutoRunAcceptanceRadius = 50;

@@ -130,6 +130,9 @@ protected:
 	UFUNCTION()
 	virtual void OnRep_Burned();
 
+	TArray <TSubclassOf<UGameplayAbility>> GetStartupPassiveAbilities() { return StartupPassiveAbilities; }
+	TArray <TSubclassOf<UGameplayAbility>> GetStartupAbilities() { return StartupAbilities; }
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Class Defaults")
 	ECharacterClass CharacterClass = ECharacterClass::Warrior;
 

@@ -44,6 +44,7 @@ public:
 	virtual int32 FindLevelForXP_Implementation(int32 InXP) const override;
 	virtual void ShowMagicCircle_Implementation(UMaterialInterface* DecalMaterial = nullptr) override; //UMaterialInterface Works for both Mats and Materials instances
 	virtual void HideMagicCircle_Implementation() override;
+	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/*End Player Interface*/
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
@@ -57,6 +58,8 @@ protected:
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
 	virtual void InitAbilityActorInfo() override;
+
+	void LoadProgress();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLevelUpParticles() const;

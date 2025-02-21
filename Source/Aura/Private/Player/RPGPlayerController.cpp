@@ -17,6 +17,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Actor/MagicCircle.h"
 #include "Aura/Aura.h"
+#include "Interaction/HighlightInterface.h"
 
 ARPGPlayerController::ARPGPlayerController()
 {
@@ -87,8 +88,6 @@ void ARPGPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
 		{
 			MagicCircle->GetMagicCircleDecal()->SetMaterial(0, DecalMaterial);
 		}
-
-		//MagicCircle->SetMagicCircleRadius(Radius);
 	}
 }
 
@@ -137,8 +136,8 @@ void ARPGPlayerController::CursorTrace()
 	// If blocking cursor trace clear highlight target and return
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_CursorTrace))
 	{
-		if (LastActor) LastActor->UnHighlightActor();
-		if (ThisActor) ThisActor->UnHighlightActor();
+		UnHighlightActor(LastActor);
+		UnHighlightActor(ThisActor);
 
 		LastActor = nullptr;
 		ThisActor = nullptr;
@@ -151,13 +150,45 @@ void ARPGPlayerController::CursorTrace()
 	if (!CursorHit.bBlockingHit) return;
 
 	LastActor = ThisActor;
-	ThisActor = CursorHit.GetActor();
+
+	if (IsValid(CursorHit.GetActor()) && CursorHit.GetActor()->Implements<UHighlightInterface>())
+	{
+		ThisActor = CursorHit.GetActor();
+	}
+
+	else
+	{
+		ThisActor = nullptr;
+	}
 
 	if (LastActor != ThisActor)
 	{
-		if (LastActor) LastActor->UnHighlightActor();
-		
-		if (ThisActor) ThisActor->HighlightActor();
+		UnHighlightActor(LastActor);
+		HighlightActor(ThisActor);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InActor"></param>
+void ARPGPlayerController::HighlightActor(AActor* InActor)
+{
+	if (IsValid(InActor) && InActor->Implements<UHighlightInterface>())
+	{
+		IHighlightInterface::Execute_HighlightActor(InActor);
+	}
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="InActor"></param>
+void ARPGPlayerController::UnHighlightActor(AActor* InActor)
+{
+	if (IsValid(InActor) && InActor->Implements<UHighlightInterface>())
+	{
+		IHighlightInterface::Execute_UnHighlightActor(InActor);
 	}
 }
 
@@ -185,23 +216,20 @@ void ARPGPlayerController::UpdateMagicCircleLocation()
 /// 
 /// </summary>
 void ARPGPlayerController::AutoRun()
-{
-	if (bUseClickToMove)
+{	
+	if (!bAutoRunning) return;
+
+	if (APawn* ControlledPawn = GetPawn())
 	{
-		if (!bAutoRunning) return;
+		const FVector LocationOnSpline = Spline->FindLocationClosestToWorldLocation(ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+		const FVector Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
+		ControlledPawn->AddMovementInput(Direction);
 
-		if (APawn* ControlledPawn = GetPawn())
+		const float DistanceToDestination = (LocationOnSpline - CachedDestination).Length();
+
+		if (DistanceToDestination <= AutoRunAcceptanceRadius)
 		{
-			const FVector LocationOnSpline = Spline->FindLocationClosestToWorldLocation(ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
-			const FVector Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
-			ControlledPawn->AddMovementInput(Direction);
-
-			const float DistanceToDestination = (LocationOnSpline - CachedDestination).Length();
-
-			if (DistanceToDestination <= AutoRunAcceptanceRadius)
-			{
-				bAutoRunning = false;
-			}
+			bAutoRunning = false;
 		}
 	}
 }
@@ -260,14 +288,17 @@ void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputPressed)) return;
 
-	// Only do this if you want to use Click to move
-	if (bUseClickToMove)
+	// HARDCODED FOR LEFT MOUSE BUTTON
+	if (InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
 	{
-		// HARDCODED FOR LEFT MOUSE BUTTON
-		if (InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
+		if (IsValid(ThisActor))
 		{
-			bTargeting = ThisActor ? true : false;
+			TargetingStatus = ThisActor->Implements<UEnemyInterface>() ? ETargetingStatus::TargetingEnemy : ETargetingStatus::TargetingNonEnemy;
 			bAutoRunning = false;
+		}
+		else
+		{
+			TargetingStatus = ETargetingStatus::NotTargeting;
 		}
 	}
 
@@ -284,9 +315,22 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputReleased)) return;
 
-	// If not Using Click to move
-	if (!bUseClickToMove) GetASC()->AbilityInputTagReleased(InputTag);
-	
+	// If not Using Click to move, use ability TODO: Also check if targeting checkpoint
+	if (!bUseClickToMove)
+	{
+		if (!IsValid(ThisActor)) return;
+		
+		if ((TargetingStatus == ETargetingStatus::TargetingEnemy || TargetingStatus == ETargetingStatus::NotTargeting) && ThisActor->Implements<UHighlightInterface>())
+		{
+			GetASC()->AbilityInputTagReleased(InputTag);
+		}
+
+		else if(TargetingStatus == ETargetingStatus::TargetingNonEnemy && ThisActor->Implements<UHighlightInterface>())
+		{
+			IHighlightInterface::Execute_InteractWithActor(ThisActor, this);
+		}
+	}
+
 	// If Using Click to move
 	if (bUseClickToMove)
 	{
@@ -300,12 +344,23 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 		GetASC()->AbilityInputTagReleased(InputTag);
 
 		// If HitResult is not an enemy and not holding shift key
-		if (!bTargeting && !bShiftKeyDown)
+		if (TargetingStatus != ETargetingStatus::TargetingEnemy && !bShiftKeyDown)
 		{
 			APawn* ControlledPawn = GetPawn();
 
 			if (FollowTime <= ShortPressThreshold && ControlledPawn)
 			{
+				// If clicking on an actor who can be highlighted
+				if (IsValid(ThisActor) && ThisActor->Implements<UHighlightInterface>())
+				{
+					IHighlightInterface::Execute_SetMoveToLocation(ThisActor, CachedDestination);
+				}
+
+				else if (GetASC() && !GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputPressed))
+				{
+					UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem, CachedDestination);
+				}
+
 				if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CachedDestination))
 				{
 					Spline->ClearSplinePoints();
@@ -321,11 +376,10 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 						bAutoRunning = true;
 					}
 				}
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem, CachedDestination);
 			}
 
 			FollowTime = 0;
-			bTargeting = false;
+			TargetingStatus = ETargetingStatus::NotTargeting;
 		}
 	}
 }
@@ -357,7 +411,7 @@ void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		}
 
 		// If HitResult is an enemy or shift key held
-		if (bTargeting||bShiftKeyDown) GetASC()->AbilityInputTagHeld(InputTag);
+		if (TargetingStatus == ETargetingStatus::TargetingEnemy ||bShiftKeyDown) GetASC()->AbilityInputTagHeld(InputTag);
 		
 		// If HitResult is not an enemy
 		else

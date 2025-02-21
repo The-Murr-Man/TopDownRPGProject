@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Character/RPGCharacterBase.h"
 #include "Interaction/EnemyInterface.h"
+#include "Interaction/HighlightInterface.h"
 #include "UI/WidgetController/OverlayWidgetController.h"
 #include "RPGEnemy.generated.h"
 
@@ -16,7 +17,7 @@ class ARPGAIController;
  * 
  */
 UCLASS()
-class AURA_API ARPGEnemy : public ARPGCharacterBase, public IEnemyInterface
+class AURA_API ARPGEnemy : public ARPGCharacterBase, public IEnemyInterface, public IHighlightInterface
 {
 	GENERATED_BODY()
 	
@@ -25,15 +26,15 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	// Enemy Interface functions
-	virtual void HighlightActor() override;
-	virtual void UnHighlightActor() override;
-
-	virtual void SetCombatTarget_Implementation(AActor* InCombatTarget) override;
-	virtual AActor* GetCombatTarget_Implementation() const override;
+	// Highlight Interface functions
+	virtual void HighlightActor_Implementation() override;
+	virtual void UnHighlightActor_Implementation() override;
+	virtual void SetMoveToLocation_Implementation(FVector& OutLocation) override;
 	//
 
 	// Combat Interface
+	virtual void SetCombatTarget_Implementation(AActor* InCombatTarget) override;
+	virtual AActor* GetCombatTarget_Implementation() const override;
 	virtual int32 GetPlayerLevel_Implementation() override;
 	virtual void Die(const FVector& DeathImpulse) override;
 	//

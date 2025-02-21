@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "PassiveNiagaraComponent.generated.h"
 
+class URPGAbilitySystemComponent;
 /**
  * 
  */
@@ -25,4 +26,6 @@ protected:
 	virtual void BeginPlay() override;
 
 	void OnPassiveActivate(const FGameplayTag& AbilityTag, bool bActivate);
+
+	void ActivateIfEquipped(URPGAbilitySystemComponent* RPGASC);
 };
