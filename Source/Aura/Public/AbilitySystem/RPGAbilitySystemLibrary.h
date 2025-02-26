@@ -17,6 +17,7 @@ class UAbilitySystemComponent;
 struct FWidgetControllerParams;
 struct FGameplayEffectTypes;
 class ULoadScreenSaveGame;
+class ULootTiers;
 /**
  * 
  */
@@ -166,4 +167,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "RPGAbilitySystemLibrary|DamageEffect")
 	static float CalculateRadialDamage(const FGameplayEffectContextHandle& EffectContextHandle, const float Damage, const AActor* TargetAvatar);
+
+	UFUNCTION(BlueprintCallable, Category = "RPGAbilitySystemLibrary|LootTiers", meta = (DefaultToSelf = "WorldContextObject"))
+	static ULootTiers* GetLootTiers(const UObject* WorldContextObject);
 };

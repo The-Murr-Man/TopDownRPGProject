@@ -8,9 +8,10 @@
 #include "RPGGameplayTags.h"
 #include "SpellMenuWidgetController.generated.h"
 
-
+// Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnSpellGlobeSelectSignature, bool, bSpendPointsButtonEnabled, bool, bEqiupButtonEnabled, FString, DescriptionString, FString, NexLevelDescriptionString);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWaitForEquipSelectionSignature, const FGameplayTag&, AbiltyType);
+
 struct FSelectedAbility
 {
 	FGameplayTag Ability = FGameplayTag();
@@ -28,6 +29,10 @@ class AURA_API USpellMenuWidgetController : public URPGWidgetController
 public:
 	virtual void BroadcastInitialValues() override;
 	virtual void BindCallbacksToDependencies() override;
+
+	void UpdateSpellPoints(int SpellPoints);
+
+	void UpdateAbilityStatus(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 NewLevel);
 
 	UFUNCTION(BlueprintCallable)
 	void SpellGlobeSelected(const FGameplayTag& AbilityTag);

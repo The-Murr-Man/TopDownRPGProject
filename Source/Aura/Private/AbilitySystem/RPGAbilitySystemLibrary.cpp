@@ -370,6 +370,19 @@ float URPGAbilitySystemLibrary::CalculateRadialDamage(const FGameplayEffectConte
 	return RadialDamage;
 }
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <returns></returns>
+ULootTiers* URPGAbilitySystemLibrary::GetLootTiers(const UObject* WorldContextObject)
+{
+	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!RPGGameMode) return nullptr;
+
+	return RPGGameMode->LootTiers;
+}
+
 /*Setters ------------------------------------------------------------->*/
 
 /// <summary>

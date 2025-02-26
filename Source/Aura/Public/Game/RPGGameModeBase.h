@@ -11,7 +11,7 @@ class UAbilityInfo;
 class UMVVM_LoadSlot;
 class USaveGame;
 class ULoadScreenSaveGame;
-
+class ULootTiers;
 /**
  * 
  */
@@ -27,6 +27,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability Info")
 	TObjectPtr<UAbilityInfo> AbilityInfo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "LootTiers")
+	TObjectPtr<ULootTiers> LootTiers;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Save Game")
 	TSubclassOf<USaveGame> LoadScreenSaveGameClass;
@@ -62,6 +65,7 @@ public:
 	void SaveWorldState(UWorld* World, const FString& DestinationMapAssetName = FString(""));
 	void LoadWorldState(UWorld* World);
 
+	void PlayerDied(ACharacter* DeadCharacter);
 protected:
 
 	virtual void BeginPlay() override;

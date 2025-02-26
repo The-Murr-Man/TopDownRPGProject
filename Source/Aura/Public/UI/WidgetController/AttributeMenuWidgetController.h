@@ -24,17 +24,19 @@ class AURA_API UAttributeMenuWidgetController : public URPGWidgetController
 	GENERATED_BODY()
 	
 public:
-	virtual void BroadcastInitialValues() override;
-	virtual void BindCallbacksToDependencies() override;
-
-	UFUNCTION(BlueprintCallable)
-	void UpgradeAttribute(const FGameplayTag& AttributeTag);
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FAttributeInfoSigniture AttributeInfoDelegate;
 
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Attributes")
 	FOnPlayerStatChangedSignature AttributePointsChangedDelegate;
+
+	virtual void BroadcastInitialValues() override;
+	virtual void BindCallbacksToDependencies() override;
+
+	UFUNCTION(BlueprintCallable)
+	void UpgradeAttribute(const FGameplayTag& AttributeTag);
+
 protected:
 
 	UPROPERTY(EditDefaultsOnly)

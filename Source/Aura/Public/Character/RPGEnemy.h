@@ -42,6 +42,8 @@ public:
 	// Callback for when enemy is hit
 	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
+	void SetEnemyLevel(int32 InLevel) { Level = InLevel; }
+
 	UPROPERTY(BlueprintAssignable)
 	FOnAttributeChangedSignature OnHealthChanged;
 
@@ -61,6 +63,9 @@ protected:
 
 	virtual void InitializeDefaultAttributes() override;
 	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SpawnLoot();
 
 	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Character Class Defaults")
 	int32 Level = 1;

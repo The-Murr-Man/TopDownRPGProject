@@ -7,6 +7,7 @@
 #include "Game/LoadScreenSaveGame.h"
 #include "MVVM_LoadSlot.generated.h"
 
+// Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSetWidgetSwitcherIndex, int32, WidgetSwitcherIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEnableSelectSlotButton, bool, bEnable);
 
@@ -26,18 +27,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FEnableSelectSlotButton EnableSelectSlotButtonDelegate;
 
-	void InitializeSlot();
-
-	void SetPlayerName(FString InPlayerName);
-	void SetLoadSlotName(FString InLoadSlotName);
-	void SetMapName(FString InMapName);
-	void SetPlayerLevel(int32 InPlayerLevel);
-
-	FString GetPlayerName() const { return PlayerName; }
-	FString GetLoadSlotName() const { return LoadSlotName; }
-	FString GetMapName() const { return MapName; }
-	int32 GetPlayerLevel() const { return PlayerLevel; }
-
 	UPROPERTY()
 	int32 SlotIndex;
 
@@ -46,6 +35,20 @@ public:
 
 	UPROPERTY()
 	TEnumAsByte<ESaveSlotStatus> LoadSlotStatus;
+	void InitializeSlot();
+
+	void SetPlayerName(FString InPlayerName);
+	void SetLoadSlotName(FString InLoadSlotName);
+	void SetMapName(FString InMapName);
+	void SetMapAssetName(FString InMapAssetName);
+	void SetPlayerLevel(int32 InPlayerLevel);
+
+	FString GetPlayerName() const { return PlayerName; }
+	FString GetLoadSlotName() const { return LoadSlotName; }
+	FString GetMapName() const { return MapName; }
+	FString GetMapAssetName() const { return MapAssetName; }
+	int32 GetPlayerLevel() const { return PlayerLevel; }
+
 protected:
 
 private:
@@ -57,6 +60,9 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, FieldNotify, Setter, Getter, meta = (AllowPrivateAccess = "true"))
 	FString MapName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, FieldNotify, Setter, Getter, meta = (AllowPrivateAccess = "true"))
+	FString MapAssetName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, FieldNotify, Setter, Getter, meta = (AllowPrivateAccess = "true"))
 	int32 PlayerLevel;

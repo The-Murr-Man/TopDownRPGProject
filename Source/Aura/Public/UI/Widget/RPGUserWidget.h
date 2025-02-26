@@ -14,12 +14,6 @@ class AURA_API URPGUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-
-protected:
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void WidgetControllerSet();
-
 public:
 
 	UFUNCTION(BlueprintCallable)
@@ -27,5 +21,10 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UObject> WidgetController;
+
+protected:
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void WidgetControllerSet();
 
 };

@@ -36,6 +36,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	UAttributeSet* GetAttributeSet() const { return AttributeSet; }
 
+
 	/** Combat Interface */
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override { return HitReactMontage; };
 	// Used on Server
@@ -72,6 +73,8 @@ public:
 	bool bHitReacting = false;
 
 	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	void SetCharacterClass(ECharacterClass InCharacterClass) { CharacterClass = InCharacterClass; }
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -109,6 +112,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat");
 	FName TailSocketName;
 
+	UPROPERTY(BlueprintReadOnly)
 	bool bDead = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")

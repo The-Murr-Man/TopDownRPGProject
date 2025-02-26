@@ -9,7 +9,7 @@
 #include "GameplayTagContainer.h"
 
 /// <summary>
-/// 
+/// Broadcasts all ability info and spell points
 /// </summary>
 void USpellMenuWidgetController::BroadcastInitialValues()
 {
@@ -20,60 +20,71 @@ void USpellMenuWidgetController::BroadcastInitialValues()
 }
 
 /// <summary>
-/// 
+/// Bind callback function to Ability System Delegates
 /// </summary>
 void USpellMenuWidgetController::BindCallbacksToDependencies()
 {
-	GetRPGASC()->AbilityStatusChangedDelegate.AddLambda(
-		[this](const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag,int32 NewLevel)
-		{
-			if (SelectedAbility.Ability.MatchesTagExact(AbilityTag))
-			{
-				SelectedAbility.Status = StatusTag;
-
-				bool bEnableSpendPoints = false;
-				bool bEnableEquip = false;
-				ShouldEnableButtons(StatusTag, CurrentSpellPoints, bEnableSpendPoints, bEnableEquip);
-
-				FString Description;
-				FString NextLevelDescription;
-				GetRPGASC()->GetDescriptionsByAbilityTag(AbilityTag, Description,NextLevelDescription);
-				
-				SpellGlobeSelectedDelegate.Broadcast(bEnableSpendPoints, bEnableEquip, Description,NextLevelDescription);
-			}
-
-			if (AbilityInfo)
-			{
-				FRPGAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
-				Info.StatusTag = StatusTag;
-				AbilityInfoDelegate.Broadcast(Info);
-			}
-		});
+	GetRPGASC()->AbilityStatusChangedDelegate.AddUObject(this, &USpellMenuWidgetController::UpdateAbilityStatus);
 
 	GetRPGASC()->AbilityEquippedDelegate.AddUObject(this, &USpellMenuWidgetController::OnAbilityEquipped);
 
-	//Lambda For updating spell points
-	GetRPGPS()->OnSpellPointsChangedDelegate.AddLambda(
-		[this](int SpellPoints)
-		{
-			SpellPointsChangedDelegate.Broadcast(SpellPoints);
-			CurrentSpellPoints = SpellPoints;
-
-			bool bEnableSpendPoints = false;
-			bool bEnableEquip = false;
-
-			ShouldEnableButtons(SelectedAbility.Status, CurrentSpellPoints, bEnableSpendPoints, bEnableEquip);
-			
-			FString Description;
-			FString NextLevelDescription;
-			GetRPGASC()->GetDescriptionsByAbilityTag(SelectedAbility.Ability, Description, NextLevelDescription);
-
-			SpellGlobeSelectedDelegate.Broadcast(bEnableSpendPoints, bEnableEquip, Description, NextLevelDescription);
-		});
+	GetRPGPS()->OnSpellPointsChangedDelegate.AddUObject(this, &USpellMenuWidgetController::UpdateSpellPoints);
 }
 
 /// <summary>
-/// 
+/// Updates spell points and checks whether an ability is unlocked
+/// </summary>
+/// <param name="SpellPoints"></param>
+void USpellMenuWidgetController::UpdateSpellPoints(int SpellPoints)
+{
+	SpellPointsChangedDelegate.Broadcast(SpellPoints);
+	CurrentSpellPoints = SpellPoints;
+
+	bool bEnableSpendPoints = false;
+	bool bEnableEquip = false;
+
+	ShouldEnableButtons(SelectedAbility.Status, CurrentSpellPoints, bEnableSpendPoints, bEnableEquip);
+
+	FString Description;
+	FString NextLevelDescription;
+	GetRPGASC()->GetDescriptionsByAbilityTag(SelectedAbility.Ability, Description, NextLevelDescription);
+
+	SpellGlobeSelectedDelegate.Broadcast(bEnableSpendPoints, bEnableEquip, Description, NextLevelDescription);
+}
+
+/// <summary>
+/// Updates the abiliy status
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <param name="StatusTag"></param>
+/// <param name="NewLevel"></param>
+void USpellMenuWidgetController::UpdateAbilityStatus(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 NewLevel)
+{
+	if (SelectedAbility.Ability.MatchesTagExact(AbilityTag))
+	{
+		SelectedAbility.Status = StatusTag;
+
+		bool bEnableSpendPoints = false;
+		bool bEnableEquip = false;
+		ShouldEnableButtons(StatusTag, CurrentSpellPoints, bEnableSpendPoints, bEnableEquip);
+
+		FString Description;
+		FString NextLevelDescription;
+		GetRPGASC()->GetDescriptionsByAbilityTag(AbilityTag, Description, NextLevelDescription);
+
+		SpellGlobeSelectedDelegate.Broadcast(bEnableSpendPoints, bEnableEquip, Description, NextLevelDescription);
+	}
+
+	if (AbilityInfo)
+	{
+		FRPGAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+		Info.StatusTag = StatusTag;
+		AbilityInfoDelegate.Broadcast(Info);
+	}
+}
+
+/// <summary>
+/// Handles selection of a spell
 /// </summary>
 /// <param name="AbilityTag"></param>
 void USpellMenuWidgetController::SpellGlobeSelected(const FGameplayTag& AbilityTag)
@@ -144,7 +155,7 @@ void USpellMenuWidgetController::SpellGlobeDeselected()
 }
 
 /// <summary>
-/// 
+/// Calls the Ability Systems Spend point function
 /// </summary>
 void USpellMenuWidgetController::SpendPointButtonPressed()
 {
@@ -153,7 +164,7 @@ void USpellMenuWidgetController::SpendPointButtonPressed()
 }
 
 /// <summary>
-/// 
+/// Handles functionality for when the equip button is pressed
 /// </summary>
 void USpellMenuWidgetController::EquipButtonPressed()
 {
@@ -170,7 +181,7 @@ void USpellMenuWidgetController::EquipButtonPressed()
 }
 
 /// <summary>
-/// 
+/// Handles functionality pressing the spell row to equip and ability
 /// </summary>
 /// <param name="SlotTag - Input Tag for the Slot"></param>
 /// <param name="AbilityType - Type of ability in the Slot"></param>
@@ -186,7 +197,7 @@ void USpellMenuWidgetController::SpellRowGlobePressed(const FGameplayTag& SlotTa
 }
 
 /// <summary>
-/// 
+/// Handles functionality of equipping and ability
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <param name="Status"></param>
@@ -221,7 +232,7 @@ void USpellMenuWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTa
 }
 
 /// <summary>
-/// 
+/// Handles functionality of enabling the spend points and equip button
 /// </summary>
 /// <param name="AbilityStatus"></param>
 /// <param name="SpellPoints"></param>

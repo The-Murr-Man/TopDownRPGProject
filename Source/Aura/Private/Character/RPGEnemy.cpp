@@ -199,6 +199,8 @@ void ARPGEnemy::Die(const FVector& DeathImpulse)
 	SetLifeSpan(LifeSpan);
 
 	if (RPGAIController) RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"),true);
+
+	SpawnLoot();
 	Super::Die(DeathImpulse);
 }
 

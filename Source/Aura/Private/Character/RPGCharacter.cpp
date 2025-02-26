@@ -266,6 +266,32 @@ int32 ARPGCharacter::GetPlayerLevel_Implementation()
 /// <summary>
 /// 
 /// </summary>
+/// <param name="DeathImpulse"></param>
+void ARPGCharacter::Die(const FVector& DeathImpulse)
+{
+	Super::Die(DeathImpulse);
+
+	// Handle Death
+	FTimerDelegate DeathTimerDelegate;
+
+	// TODO: Swap To Callback Function
+	DeathTimerDelegate.BindLambda([this]()
+	{
+		ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
+		if (RPGGameMode)
+		{
+			RPGGameMode->PlayerDied(this);
+		}
+	});
+
+	GetWorldTimerManager().SetTimer(DeathTimer, DeathTimerDelegate, DeathTime, false);
+	CameraComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+}
+
+/// <summary>
+/// 
+/// </summary>
 /// <param name="InXP"></param>
 void ARPGCharacter::AddToXP_Implementation(int32 InXP)
 {

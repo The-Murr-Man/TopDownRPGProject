@@ -15,6 +15,7 @@ class URPGAbilitySystemComponent;
 class URPGAttributeSet;
 class UAbilityInfo;
 
+// Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStatChangedSignature, int32, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoSigniture, const FRPGAbilityInfo&, Info);
 

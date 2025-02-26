@@ -8,6 +8,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RPGAttributeSet.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ARPGEffectActor::ARPGEffectActor()
@@ -19,11 +20,58 @@ ARPGEffectActor::ARPGEffectActor()
 	
 }
 
+void ARPGEffectActor::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	RunningTime += DeltaTime;
+
+	// Reset Running time if period is reached
+	const float SinPeriod = 2 * PI / SinPeriodConstant;
+
+	if (RunningTime > SinPeriod) RunningTime = 0;
+
+	ItemMovement(DeltaTime);
+}
+
 
 // Called when the game starts or when spawned
 void ARPGEffectActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InitialLocation = GetActorLocation();
+	CalculatedLocation = InitialLocation;
+	CalculatedRotation = GetActorRotation();
+
+}
+
+void ARPGEffectActor::StartSinusoidalMovement()
+{
+	bSinusoidalMovement = true;
+	InitialLocation = GetActorLocation();
+	CalculatedLocation = InitialLocation;
+}
+
+void ARPGEffectActor::StartRotation()
+{
+	bRotates = true;
+	CalculatedRotation = GetActorRotation();
+}
+
+void ARPGEffectActor::ItemMovement(float DeltaTime)
+{
+	if (bRotates)
+	{
+		const FRotator DeltaRotation(0, DeltaTime * RotationRate, 0);
+		CalculatedRotation = UKismetMathLibrary::ComposeRotators(CalculatedRotation, DeltaRotation);
+	}
+
+	if (bSinusoidalMovement)
+	{
+		const float Sine = SinAmplitude * FMath::Sin(RunningTime * SinPeriodConstant);
+		CalculatedLocation = InitialLocation + FVector(0, 0, Sine);
+	}
 }
 
 void ARPGEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
@@ -123,7 +171,3 @@ void ARPGEffectActor::OnEndOverlap(AActor* TargetActor)
 		}
 	}
 }
-
-
-
-

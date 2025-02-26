@@ -36,12 +36,43 @@ public:
 	// Sets default values for this actor's properties
 	ARPGEffectActor();
 
-private:
-
+	virtual void Tick(float DeltaTime) override;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// For moving actors
+	UFUNCTION(BlueprintCallable)
+	void StartSinusoidalMovement();
+
+	UFUNCTION(BlueprintCallable)
+	void StartRotation();
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector CalculatedLocation;
+
+	UPROPERTY(BlueprintReadOnly)
+	FRotator CalculatedRotation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PickupMovement")
+	bool bRotates = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PickupMovement")
+	float RotationRate = 45;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PickupMovement")
+	bool bSinusoidalMovement = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PickupMovement")
+	float SinAmplitude = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PickupMovement")
+	float SinPeriodConstant = 1; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PickupMovement")
+	FVector InitialLocation;
+	//
 
 	UFUNCTION(BlueprintCallable)
 	void ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass);
@@ -88,6 +119,11 @@ protected:
 	// Map containing all active effect handles
 	TMap<FActiveGameplayEffectHandle, UAbilitySystemComponent*> ActiveEffectHandles;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Applied Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Applied Effects")
 	float ActorLevel = 1;
+
+private:
+	float RunningTime = 0;
+
+	void ItemMovement(float DeltaTime);
 };

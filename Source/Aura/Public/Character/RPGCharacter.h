@@ -23,12 +23,16 @@ public:
 	ARPGCharacter();
 
 	virtual void PossessedBy(AController* NewController) override;
-	virtual void OnRep_PlayerState() override;
-	virtual void OnRep_Stunned() override;
-	virtual void OnRep_Burned() override;
+	
 	/*Combat Interface*/
 	virtual int32 GetPlayerLevel_Implementation() override;
+	virtual void Die(const FVector& DeathImpulse) override;
 	/*End Combat Interface*/
+
+	UPROPERTY(EditDefaultsOnly)
+	float DeathTime = 5;
+
+	FTimerHandle DeathTimer;
 
 	/*Player Interface*/
 	virtual void AddToXP_Implementation(int32 InXP) override;
@@ -49,6 +53,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<UNiagaraComponent> LevelUpNiagaraComponent;
+
+	virtual void OnRep_PlayerState() override;
+	virtual void OnRep_Stunned() override;
+	virtual void OnRep_Burned() override;
 
 protected:
 	UPROPERTY(VisibleAnywhere)

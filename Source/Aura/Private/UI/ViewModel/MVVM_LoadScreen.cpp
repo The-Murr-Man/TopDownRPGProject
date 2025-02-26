@@ -50,15 +50,22 @@ void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& EnteredNa
 {
 	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
 
+	if (!IsValid(RPGGameMode)) return; // Turns off multiplayer
+
 	LoadSlots[Slot]->SetPlayerName(EnteredName);
 	LoadSlots[Slot]->LoadSlotStatus = Taken;
 	LoadSlots[Slot]->SetMapName(RPGGameMode->DefaultMapName);
 	LoadSlots[Slot]->PlayerStartTag = RPGGameMode->DefaultPlayerStartTag;
 	LoadSlots[Slot]->SetPlayerLevel(1);
+	LoadSlots[Slot]->SetMapAssetName(RPGGameMode->DefaultMap.ToSoftObjectPath().GetAssetName());
+	
 	RPGGameMode->SaveSlotData(LoadSlots[Slot], Slot);
 	LoadSlots[Slot]->InitializeSlot();
 
 	URPGGameInstance* RGPGameInstance = Cast<URPGGameInstance>(RPGGameMode->GetGameInstance());
+
+	if (!IsValid(RGPGameInstance)) return;
+
 	RGPGameInstance->LoadSlotName = LoadSlots[Slot]->GetLoadSlotName();
 	RGPGameInstance->LoadSlotIndex = LoadSlots[Slot]->SlotIndex;
 	RGPGameInstance->PlayerStartTag = RPGGameMode->DefaultPlayerStartTag;
@@ -124,6 +131,7 @@ void UMVVM_LoadScreen::PlayButtonPressed()
 {
 	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
 	URPGGameInstance* RGPGameInstance = Cast<URPGGameInstance>(RPGGameMode->GetGameInstance());
+	if (!IsValid(RPGGameMode) && !IsValid(RGPGameInstance)) return;
 
 	RGPGameInstance->PlayerStartTag = SelectedSlot->PlayerStartTag;
 	RGPGameInstance->LoadSlotName = SelectedSlot->GetLoadSlotName();
@@ -139,6 +147,8 @@ void UMVVM_LoadScreen::PlayButtonPressed()
 void UMVVM_LoadScreen::LoadData()
 {
 	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
+
+	if (!IsValid(RPGGameMode)) return;
 
 	for (const TTuple<int32, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
 	{

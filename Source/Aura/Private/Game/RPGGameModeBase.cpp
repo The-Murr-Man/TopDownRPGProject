@@ -10,6 +10,7 @@
 #include "Interaction/SaveInterface.h"
 #include "EngineUtils.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
+#include "GameFramework/Character.h"
 
 void ARPGGameModeBase::BeginPlay()
 {
@@ -17,7 +18,6 @@ void ARPGGameModeBase::BeginPlay()
 
 	GameMaps.Add(DefaultMapName, DefaultMap);
 }
-
 
 /// <summary>
 /// 
@@ -40,6 +40,7 @@ void ARPGGameModeBase::SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex)
 	LoadScreenSaveGame->SaveSlotStatus = Taken;
 	LoadScreenSaveGame->MapName = LoadSlot->GetMapName();
 	LoadScreenSaveGame->PlayerStartTag = LoadSlot->PlayerStartTag;
+	LoadScreenSaveGame->MapAssetName = LoadSlot->GetMapAssetName();
 	UGameplayStatics::SaveGameToSlot(LoadScreenSaveGame, LoadSlot->GetLoadSlotName(), SlotIndex);
 }
 
@@ -198,6 +199,20 @@ void ARPGGameModeBase::LoadWorldState(UWorld* World)
 			}
 		}
 	}
+}
+
+/// <summary>
+/// Handles functionality of players death
+/// </summary>
+/// <param name="DeadCharacter"></param>
+void ARPGGameModeBase::PlayerDied(ACharacter* DeadCharacter)
+{
+	ULoadScreenSaveGame* SaveGame = RetreiveInGameSaveData();
+
+	if (!IsValid(SaveGame)) return;
+
+	UGameplayStatics::OpenLevel(DeadCharacter, FName(SaveGame->MapAssetName));
+
 }
 
 /// <summary>
