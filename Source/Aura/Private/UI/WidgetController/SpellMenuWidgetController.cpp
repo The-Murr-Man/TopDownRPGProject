@@ -24,10 +24,13 @@ void USpellMenuWidgetController::BroadcastInitialValues()
 /// </summary>
 void USpellMenuWidgetController::BindCallbacksToDependencies()
 {
+	// Binding UpdateAbilityStatus to the Ability Systems AbilityStatusChangedDelegate
 	GetRPGASC()->AbilityStatusChangedDelegate.AddUObject(this, &USpellMenuWidgetController::UpdateAbilityStatus);
 
+	// Binding OnAbilityEquipped to the Ability Systems AbilityEquippedDelegate
 	GetRPGASC()->AbilityEquippedDelegate.AddUObject(this, &USpellMenuWidgetController::OnAbilityEquipped);
 
+	// Binding UpdateSpellPoints to the Ability Systems OnSpellPointsChangedDelegate
 	GetRPGPS()->OnSpellPointsChangedDelegate.AddUObject(this, &USpellMenuWidgetController::UpdateSpellPoints);
 }
 
@@ -37,6 +40,7 @@ void USpellMenuWidgetController::BindCallbacksToDependencies()
 /// <param name="SpellPoints"></param>
 void USpellMenuWidgetController::UpdateSpellPoints(int SpellPoints)
 {
+	// Broadcasts SpellPointsChangedDelegate using the given spell points
 	SpellPointsChangedDelegate.Broadcast(SpellPoints);
 	CurrentSpellPoints = SpellPoints;
 
@@ -45,11 +49,7 @@ void USpellMenuWidgetController::UpdateSpellPoints(int SpellPoints)
 
 	ShouldEnableButtons(SelectedAbility.Status, CurrentSpellPoints, bEnableSpendPoints, bEnableEquip);
 
-	FString Description;
-	FString NextLevelDescription;
-	GetRPGASC()->GetDescriptionsByAbilityTag(SelectedAbility.Ability, Description, NextLevelDescription);
-
-	SpellGlobeSelectedDelegate.Broadcast(bEnableSpendPoints, bEnableEquip, Description, NextLevelDescription);
+	UpdateSpellDescription(bEnableSpendPoints, bEnableEquip);
 }
 
 /// <summary>
@@ -60,25 +60,27 @@ void USpellMenuWidgetController::UpdateSpellPoints(int SpellPoints)
 /// <param name="NewLevel"></param>
 void USpellMenuWidgetController::UpdateAbilityStatus(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 NewLevel)
 {
+	// Checks if the selected ability matches the AbilityTag
 	if (SelectedAbility.Ability.MatchesTagExact(AbilityTag))
 	{
+		// Updates the SelectedAbility status
 		SelectedAbility.Status = StatusTag;
 
 		bool bEnableSpendPoints = false;
 		bool bEnableEquip = false;
 		ShouldEnableButtons(StatusTag, CurrentSpellPoints, bEnableSpendPoints, bEnableEquip);
 
-		FString Description;
-		FString NextLevelDescription;
-		GetRPGASC()->GetDescriptionsByAbilityTag(AbilityTag, Description, NextLevelDescription);
-
-		SpellGlobeSelectedDelegate.Broadcast(bEnableSpendPoints, bEnableEquip, Description, NextLevelDescription);
+		UpdateSpellDescription(bEnableSpendPoints, bEnableEquip);
 	}
 
+	// Checks if AbilityInfo is valid
 	if (AbilityInfo)
 	{
+		// Finds the ability info for given tag
 		FRPGAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
 		Info.StatusTag = StatusTag;
+
+		// Broadcasts new Info
 		AbilityInfoDelegate.Broadcast(Info);
 	}
 }
@@ -89,6 +91,7 @@ void USpellMenuWidgetController::UpdateAbilityStatus(const FGameplayTag& Ability
 /// <param name="AbilityTag"></param>
 void USpellMenuWidgetController::SpellGlobeSelected(const FGameplayTag& AbilityTag)
 {
+	// Checks if your WaitingForEquipSelection 
 	if (bWaitingForEquipSelection)
 	{
 		FGameplayTag SelectedAbilityType = AbilityInfo->FindAbilityInfoForTag(SelectedAbility.Ability).AbilityType;
@@ -96,10 +99,9 @@ void USpellMenuWidgetController::SpellGlobeSelected(const FGameplayTag& AbilityT
 		StopWaitingForEquipDelegate.Broadcast(SelectedAbilityType);
 		bWaitingForEquipSelection = false;
 	}
-	
 
+	// Create variables for all important information
 	const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
-
 	const int32 SpellPoints = GetRPGPS()->GetPlayerSpellPoints();
 	FGameplayTag AbilityStatus;
 	FGameplayAbilitySpec* AbilitySpec = GetRPGASC()->GetSpecFromAbilityTag(AbilityTag);
@@ -127,7 +129,16 @@ void USpellMenuWidgetController::SpellGlobeSelected(const FGameplayTag& AbilityT
 
 	ShouldEnableButtons(AbilityStatus, SpellPoints, bEnableSpendPoints, bEnableEquip);
 	
+	UpdateSpellDescription(bEnableSpendPoints, bEnableEquip);
+}
 
+/// <summary>
+/// Updates Spell Description for given tag
+/// </summary>
+/// <param name="bEnableSpendPoints"></param>
+/// <param name="bEnableEquip"></param>
+void USpellMenuWidgetController::UpdateSpellDescription(bool bEnableSpendPoints, bool bEnableEquip)
+{
 	FString Description;
 	FString NextLevelDescription;
 	GetRPGASC()->GetDescriptionsByAbilityTag(SelectedAbility.Ability, Description, NextLevelDescription);

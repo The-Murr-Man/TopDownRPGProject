@@ -40,6 +40,7 @@ ARPGCharacterBase::ARPGCharacterBase()
 	GetMesh()->SetGenerateOverlapEvents(true);
 	GetMesh()->SetReceivesDecals(false);
 
+	// Setting up Weapon Mesh
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>("Weapon Mesh");
 	WeaponMesh->SetupAttachment(GetMesh(), FName("WeaponHandSocket"));
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -80,7 +81,7 @@ void ARPGCharacterBase::BeginPlay()
 }
 
 /// <summary>
-/// 
+/// Applies all Default Attributes to self
 /// </summary>
 void ARPGCharacterBase::InitializeDefaultAttributes()
 {
@@ -90,7 +91,7 @@ void ARPGCharacterBase::InitializeDefaultAttributes()
 }
 
 /// <summary>
-/// 
+/// Applies given effect to self
 /// </summary>
 /// <param name="GameplayEffectClass"></param>
 /// <param name="Level"></param>
@@ -109,7 +110,7 @@ void ARPGCharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayE
 }
 
 /// <summary>
-/// 
+/// Adds Characters startup Passive and Offensive abilities
 /// </summary>
 void ARPGCharacterBase::AddCharacterAbilities()
 {
@@ -132,7 +133,7 @@ void ARPGCharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 New
 }
 
 /// <summary>
-/// 
+/// Handles Dissolve effect when enemy dies
 /// </summary>
 void ARPGCharacterBase::Dissolve()
 {
@@ -179,7 +180,7 @@ void ARPGCharacterBase::Die(const FVector& DeathImpulse)
 }
 
 /// <summary>
-/// 
+/// Handles deaths for all players (No longer works since game has single player loading)
 /// </summary>
 /// <param name="DeathImpulse"></param>
 void ARPGCharacterBase::MulticastHandleDeath_Implementation(const FVector& DeathImpulse)
@@ -214,7 +215,7 @@ void ARPGCharacterBase::MulticastHandleDeath_Implementation(const FVector& Death
 }
 
 /// <summary>
-/// 
+/// Returns AbilitySystemComponent
 /// </summary>
 /// <returns></returns>
 UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const
@@ -223,7 +224,7 @@ UAbilitySystemComponent* ARPGCharacterBase::GetAbilitySystemComponent() const
 }
 
 /// <summary>
-/// 
+/// Calls Parent TakeDamage and returns a float
 /// </summary>
 /// <param name="DamageAmount"></param>
 /// <param name="DamageEvent"></param>
@@ -239,7 +240,7 @@ float ARPGCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 }
 
 /// <summary>
-/// 
+/// Gets CombatSocket based on tag
 /// </summary>
 /// <param name="MontageTag"></param>
 /// <returns></returns>
@@ -270,16 +271,29 @@ FVector ARPGCharacterBase::GetCombatSocketLocation_Implementation(const FGamepla
 	return FVector();
 }
 
+/// <summary>
+/// Returns bDead
+/// </summary>
+/// <returns></returns>
 bool ARPGCharacterBase::IsDead_Implementation() const
 {
 	return bDead;
 }
 
+/// <summary>
+/// Returns this avatar
+/// </summary>
+/// <returns></returns>
 AActor* ARPGCharacterBase::GetAvatar_Implementation()
 {
 	return this;
 }
 
+/// <summary>
+/// Get the Montage of a given tag
+/// </summary>
+/// <param name="MontageTag"></param>
+/// <returns></returns>
 FTaggedMontage ARPGCharacterBase::GetTaggedMontageByTag_Implementation(const FGameplayTag& MontageTag)
 {
 	for (FTaggedMontage TaggedMontage : AttackMontages)

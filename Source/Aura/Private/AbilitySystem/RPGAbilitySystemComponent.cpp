@@ -11,65 +11,77 @@
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "Game/LoadScreenSaveGame.h"
 
-
-/// <summary>
-/// 
-/// </summary>
 void URPGAbilitySystemComponent::AbilityActorInfoSet()
 {
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &URPGAbilitySystemComponent::ClientEffectApplied);
 }
 
 /// <summary>
-/// 
+/// Give abilities to character on startup and assign the input/status tags
 /// </summary>
 /// <param name="StartupAbilities"></param>
 void URPGAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupAbilities)
 {
+	// Loops throuhg StartupAbilities
 	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupAbilities)
 	{
+		// Creates AbilitySpec from AbilityClass and Level
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 
 		if (const URPGGameplayAbility* RPGAbility = Cast<URPGGameplayAbility>(AbilitySpec.Ability))
 		{
+			// Add Gameplay Tags for Input and Status
 			AbilitySpec.DynamicAbilityTags.AddTag(RPGAbility->StartupInputTag);
 			AbilitySpec.DynamicAbilityTags.AddTag(FRPGGameplayTags::Get().Abilities_Status_Equipped);
+
+			// Give the ability
 			GiveAbility(AbilitySpec);
 		}
 	}
 
 	bStartupAbilitiesGiven = true;
-	//
+
+	// Broadcast the Abilities have been given
 	AbilitiesGivenDelegate.Broadcast();
 }
 
 /// <summary>
-/// 
+/// Give abilities to character from save data and assign the input/status tags
 /// </summary>
 /// <param name="SaveData"></param>
 void URPGAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSaveGame* SaveData)
 {
+	// Loops through the SaveData's SavedAbilities
 	for (const FSavedAbility& Data : SaveData->SavedAbilities)
 	{
+		// Create GameplayAbility from given Data
 		const TSubclassOf<UGameplayAbility> LoadedAbilityClass = Data.GameplayAbility;
 
+		// Create GameplayAbilitySpec from given Data
 		FGameplayAbilitySpec LoadedAbilitySpec = FGameplayAbilitySpec(LoadedAbilityClass, Data.AbilityLevel);
 
+		// Adds Data's Status and Slot to the DynamicTags
 		LoadedAbilitySpec.DynamicAbilityTags.AddTag(Data.AbilitySlot);
 		LoadedAbilitySpec.DynamicAbilityTags.AddTag(Data.AbilityStatus);
 
+		// Checks if Ability has the Offensive Tag
 		if (Data.AbilityType.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Type_Offensive))
 		{
 			GiveAbility(LoadedAbilitySpec);
 		}
 
+		// Checks if Ability has the Passive Tag
 		else if (Data.AbilityType.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Type_Passive))
 		{
 			GiveAbility(LoadedAbilitySpec);
 
+			// Checks if the ability is equipped on load
 			if (Data.AbilityStatus.MatchesTagExact(FRPGGameplayTags::Get().Abilities_Status_Equipped))
 			{
+				// Try to activate the ability
 				TryActivateAbility(LoadedAbilitySpec.Handle);
+
+				// Activate the passive effect
 				MulticastActivatePassiveEffect(Data.AbilityTag, true);
 			}
 		}
@@ -80,22 +92,24 @@ void URPGAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSa
 }
 
 /// <summary>
-/// 
+/// Give passive abilities to character on startup
 /// </summary>
 /// <param name="StartupPassiveAbilities"></param>
 void URPGAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& StartupPassiveAbilities)
 {
+	// Loops through StartupPassiveAbilities
 	for (TSubclassOf<UGameplayAbility> AbilityClass : StartupPassiveAbilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 
 		AbilitySpec.DynamicAbilityTags.AddTag(FRPGGameplayTags::Get().Abilities_Status_Equipped);
+
 		GiveAbilityAndActivateOnce(AbilitySpec);
 	}
 }
 
 /// <summary>
-/// 
+/// Handles what happens when Abilities input tag is pressed
 /// </summary>
 /// <param name="InputTag"></param>
 void URPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
@@ -122,7 +136,7 @@ void URPGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Inpu
 }
 
 /// <summary>
-/// 
+///  Handles what happens when Abilities input tag is held
 /// </summary>
 /// <param name="InputTag"></param>
 void URPGAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)
@@ -148,7 +162,7 @@ void URPGAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTa
 }
 
 /// <summary>
-/// 
+///  Handles what happens when Abilities input tag is released
 /// </summary>
 /// <param name="InputTag"></param>
 void URPGAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& InputTag)
@@ -171,7 +185,7 @@ void URPGAbilitySystemComponent::AbilityInputTagReleased(const FGameplayTag& Inp
 }
 
 /// <summary>
-/// 
+/// Executes the delegate for each Ability
 /// </summary>
 /// <param name="Delegate"></param>
 void URPGAbilitySystemComponent::ForEachAbility(const FForEachAbility Delegate)
@@ -188,13 +202,14 @@ void URPGAbilitySystemComponent::ForEachAbility(const FForEachAbility Delegate)
 }
 
 /// <summary>
-/// 
+/// Updates the status for all Abilities
 /// </summary>
 /// <param name="Level"></param>
 void URPGAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
 {
 	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(GetAvatarActor());
 
+	// Loops through AbilityInformation
 	for (const FRPGAbilityInfo& Info : AbilityInfo->AbilityInformation)
 	{
 		// Continue if Ability Tag isnt valid
@@ -223,7 +238,7 @@ void URPGAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
 }
 
 /// <summary>
-/// 
+/// Calls Server Version of UpgradeAttributes
 /// </summary>
 /// <param name="AttributeTag"></param>
 void URPGAbilitySystemComponent::UpgradeAttribute(const FGameplayTag& AttributeTag)
@@ -266,7 +281,7 @@ void URPGAbilitySystemComponent::ClearSlotAbilities(const FGameplayTag& Slot)
 }
 
 /// <summary>
-/// 
+/// Returns whether an Ability has a slot
 /// </summary>
 /// <param name="Spec"></param>
 /// <param name="Slot"></param>
@@ -277,7 +292,7 @@ bool URPGAbilitySystemComponent::AbilityHasSlot(FGameplayAbilitySpec& Spec, cons
 }
 
 /// <summary>
-/// Returns wether any slot has the InputTag
+/// Returns whether any slot has the InputTag
 /// </summary>
 /// <param name="Spec"></param>
 /// <returns></returns>
@@ -287,7 +302,7 @@ bool URPGAbilitySystemComponent::AbilityHasAnySlot(FGameplayAbilitySpec& Spec)
 }
 
 /// <summary>
-/// 
+/// Return whether an ability is passive
 /// </summary>
 /// <param name="Spec"></param>
 /// <returns></returns>
@@ -302,7 +317,7 @@ bool URPGAbilitySystemComponent::IsPassiveAbility(const FGameplayAbilitySpec& Sp
 }
 
 /// <summary>
-/// 
+/// Returns whether a slot is empty
 /// </summary>
 /// <param name="Slot"></param>
 /// <returns></returns>
@@ -320,7 +335,7 @@ bool URPGAbilitySystemComponent::SlotIsEmpty(const FGameplayTag& Slot)
 }
 
 /// <summary>
-/// 
+/// Sets the given slot to given spec
 /// </summary>
 /// <param name="Spec"></param>
 /// <param name="Slot"></param>
@@ -349,6 +364,7 @@ void URPGAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamepl
 		// Only Valid if Status is Equipped or Unlocked
 		const bool bStatusValid = Status == GameplayTags.Abilities_Status_Equipped || Status == GameplayTags.Abilities_Status_Unlocked;
 
+		// Check if abilities status is valid
 		if (bStatusValid)
 		{
 			// Handle activation/deactivation for passive abilities
@@ -373,9 +389,11 @@ void URPGAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamepl
 						DeactivatePassiveAbilityDelegate.Broadcast(GetAbilityTagFromSpec(*SpecWithSlot));
 					}
 
+					// Remove old status and add unlocked status
 					SpecWithSlot->DynamicAbilityTags.RemoveTag(GetStatusFromSpec(*SpecWithSlot));
 					SpecWithSlot->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Unlocked);
 
+					// Clear the slot
 					ClearSlot(SpecWithSlot);
 				}
 			}
@@ -383,20 +401,24 @@ void URPGAbilitySystemComponent::ServerEquipAbility_Implementation(const FGamepl
 			// Ability doesnt have a slot (Its Not Active)
 			if (!AbilityHasAnySlot(*AbilitySpec))
 			{
+				// Checks if ability is passive
 				if (IsPassiveAbility(*AbilitySpec))
 				{
 					TryActivateAbility(AbilitySpec->Handle);
 					MulticastActivatePassiveEffect(AbilityTag, true);
 				}
 
+				// Remove old status and add unlocked status
 				AbilitySpec->DynamicAbilityTags.RemoveTag(GetStatusFromSpec(*AbilitySpec));
 				AbilitySpec->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Equipped);
 			}
 
+			// Assign Slot to the ability
 			AssignSlotToAbility(*AbilitySpec, Slot);
 			MarkAbilitySpecDirty(*AbilitySpec);
 		}
 
+		// Call clients EquipAbility function
 		ClientEquipAbility(AbilityTag, GameplayTags.Abilities_Status_Equipped, Slot, PreviousSlot);
 	}
 }
@@ -458,7 +480,7 @@ void URPGAbilitySystemComponent::ServerUpgradeAttribute_Implementation(const FGa
 }
 
 /// <summary>
-/// 
+/// Broadcasts ActivatePassiveEffectDelegate
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <param name="bActivate"></param>
@@ -575,7 +597,7 @@ FGameplayTag URPGAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilit
 }
 
 /// <summary>
-/// 
+/// Return Slot From given AbilityTag
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <returns></returns>
@@ -589,7 +611,7 @@ FGameplayTag URPGAbilitySystemComponent::GetSlotFromAbilityTag(const FGameplayTa
 }
 
 /// <summary>
-/// 
+/// Returns Status Tag from given Ability Tag
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <returns></returns>
@@ -602,6 +624,11 @@ FGameplayTag URPGAbilitySystemComponent::GetStatusFromAbilityTag(const FGameplay
 	return FGameplayTag();
 }
 
+/// <summary>
+/// Return Input tag from given AbilityTag
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <returns></returns>
 FGameplayTag URPGAbilitySystemComponent::GetInputTagFromAbilityTag(const FGameplayTag& AbilityTag)
 {
 	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
@@ -634,7 +661,7 @@ FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromAbilityTag(const FG
 }
 
 /// <summary>
-/// 
+/// Returns Spec from given slot
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <returns></returns>
@@ -652,7 +679,7 @@ FGameplayAbilitySpec* URPGAbilitySystemComponent::GetSpecFromSlot(const FGamepla
 }
 
 /// <summary>
-/// 
+/// Returns the ability description from ability tag
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <param name="OutDescription"></param>

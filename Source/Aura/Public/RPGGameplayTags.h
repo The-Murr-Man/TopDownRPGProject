@@ -19,6 +19,11 @@ public:
 
 	static void InitializeNativeGameplayTags();
 
+	/*Vital Attributes ->*/
+	FGameplayTag Attributes_Vital_Health;
+	FGameplayTag Attributes_Vital_Mana;
+	/*Vital Attributes <- End*/
+
 	/*Primary Attributes ->*/
 	FGameplayTag Attributes_Primary_Strength;
 	FGameplayTag Attributes_Primary_Intellegence;

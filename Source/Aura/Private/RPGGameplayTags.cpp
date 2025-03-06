@@ -9,6 +9,11 @@ FRPGGameplayTags FRPGGameplayTags::GameplayTags;
 void FRPGGameplayTags::InitializeNativeGameplayTags()
 {
 	/*Adding Primary Attributes To Gameplay Tags Manager ->*/
+	GameplayTags.Attributes_Vital_Health = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Vital.Health"), FString("Health Tag"));
+	GameplayTags.Attributes_Vital_Mana = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Vital.Mana"), FString("Health Tag"));
+	//Vital Attributes End <-
+
+	/*Adding Primary Attributes To Gameplay Tags Manager ->*/
 	GameplayTags.Attributes_Primary_Strength = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Primary.Strength"), FString("Increases Physical Damage"));
 	GameplayTags.Attributes_Primary_Intellegence = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Primary.Intellegence"), FString("Increases Magical Damage"));
 	GameplayTags.Attributes_Primary_Resilience = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Primary.Resilience"), FString("Increases Armor and Armor Penetration"));

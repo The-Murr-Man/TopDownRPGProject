@@ -8,7 +8,7 @@
 #include "Game/RPGGameInstance.h"
 
 /// <summary>
-/// 
+/// Settup load slots
 /// </summary>
 void UMVVM_LoadScreen::InitializeLoadSlots()
 {
@@ -32,7 +32,7 @@ void UMVVM_LoadScreen::InitializeLoadSlots()
 }
 
 /// <summary>
-/// 
+/// Returns the LoadSlot at given index
 /// </summary>
 /// <param name="Index"></param>
 /// <returns></returns>
@@ -42,7 +42,7 @@ const UMVVM_LoadSlot* UMVVM_LoadScreen::GetLoadSlotViewModelByIndex(int32 Index)
 }
 
 /// <summary>
-/// 
+/// Handles functionality when the new slot button is pressed
 /// </summary>
 /// <param name="Slot"></param>
 /// <param name="EnteredName"></param>
@@ -52,6 +52,7 @@ void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& EnteredNa
 
 	if (!IsValid(RPGGameMode)) return; // Turns off multiplayer
 
+	// Sets the slots information
 	LoadSlots[Slot]->SetPlayerName(EnteredName);
 	LoadSlots[Slot]->LoadSlotStatus = Taken;
 	LoadSlots[Slot]->SetMapName(RPGGameMode->DefaultMapName);
@@ -59,20 +60,24 @@ void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& EnteredNa
 	LoadSlots[Slot]->SetPlayerLevel(1);
 	LoadSlots[Slot]->SetMapAssetName(RPGGameMode->DefaultMap.ToSoftObjectPath().GetAssetName());
 	
+	// Saves the slots data
 	RPGGameMode->SaveSlotData(LoadSlots[Slot], Slot);
+
+	// Initial the slot
 	LoadSlots[Slot]->InitializeSlot();
 
 	URPGGameInstance* RGPGameInstance = Cast<URPGGameInstance>(RPGGameMode->GetGameInstance());
 
 	if (!IsValid(RGPGameInstance)) return;
 
+	// Sets slots information from game instance
 	RGPGameInstance->LoadSlotName = LoadSlots[Slot]->GetLoadSlotName();
 	RGPGameInstance->LoadSlotIndex = LoadSlots[Slot]->SlotIndex;
 	RGPGameInstance->PlayerStartTag = RPGGameMode->DefaultPlayerStartTag;
 }
 
 /// <summary>
-/// 
+/// Handles functionality when the new game button is pressed
 /// </summary>
 /// <param name="Slot"></param>
 void UMVVM_LoadScreen::NewGameButtonPressed(int32 Slot)
@@ -81,13 +86,14 @@ void UMVVM_LoadScreen::NewGameButtonPressed(int32 Slot)
 }
 
 /// <summary>
-/// 
+/// Handles functionality when the select slot button is pressed
 /// </summary>
 /// <param name="Slot"></param>
 void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 Slot)
 {
 	SlotSelected.Broadcast();
 
+	// Loop through LoadSlots array
 	for (const TTuple<int32, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
 	{
 		// Set button disabled when pressed
@@ -96,7 +102,7 @@ void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 Slot)
 			LoadSlot.Value->EnableSelectSlotButtonDelegate.Broadcast(false);
 		}
 		
-		// Set other buttones enabled when button pressed
+		// Set other buttons enabled when button pressed
 		else
 		{
 			LoadSlot.Value->EnableSelectSlotButtonDelegate.Broadcast(true);
@@ -108,7 +114,7 @@ void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 Slot)
 }
 
 /// <summary>
-/// 
+///  Handles functionality when the Delete slot button is pressed
 /// </summary>
 void UMVVM_LoadScreen::DeleteButtonPressed()
 {
@@ -124,20 +130,25 @@ void UMVVM_LoadScreen::DeleteButtonPressed()
 }
 
 /// <summary>
-/// 
+///  Handles functionality when the Play slot button is pressed
 /// </summary>
 /// <param name="Slot"></param>
 void UMVVM_LoadScreen::PlayButtonPressed()
 {
+	// Get the GameMode and GameInstance
 	ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
 	URPGGameInstance* RGPGameInstance = Cast<URPGGameInstance>(RPGGameMode->GetGameInstance());
+
+	// Check if GM and GI are valid
 	if (!IsValid(RPGGameMode) && !IsValid(RGPGameInstance)) return;
 
+	// Sets GameInstace information from selected slot
 	RGPGameInstance->PlayerStartTag = SelectedSlot->PlayerStartTag;
 	RGPGameInstance->LoadSlotName = SelectedSlot->GetLoadSlotName();
 	RGPGameInstance->LoadSlotIndex = SelectedSlot->SlotIndex;
 	if (!IsValid(SelectedSlot)) return;
 
+	// Travel to selected slots map
 	RPGGameMode->TravelToMap(SelectedSlot);
 }
 
@@ -150,8 +161,10 @@ void UMVVM_LoadScreen::LoadData()
 
 	if (!IsValid(RPGGameMode)) return;
 
+	// Loops through LoadSlots Array
 	for (const TTuple<int32, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
 	{
+		// Get the SaveObject from the GameMode
 		ULoadScreenSaveGame* SaveObject = RPGGameMode->GetSaveSlotData(LoadSlot.Value->GetLoadSlotName(), LoadSlot.Key);
 
 		// Setting Values loaded in from the save object
@@ -159,6 +172,7 @@ void UMVVM_LoadScreen::LoadData()
 		const FString MapName = SaveObject->MapName;
 		TEnumAsByte<ESaveSlotStatus> SaveSlotStatus = SaveObject->SaveSlotStatus;
 
+		// Set values on load slot
 		LoadSlot.Value->LoadSlotStatus = SaveSlotStatus;
 		LoadSlot.Value->SetPlayerName(PlayerName);
 		LoadSlot.Value->SetPlayerLevel(SaveObject->PlayerLevel);
@@ -170,7 +184,7 @@ void UMVVM_LoadScreen::LoadData()
 }
 
 /// <summary>
-/// 
+/// Sets the number of load slots available
 /// </summary>
 /// <param name="InNumLoadSlots"></param>
 void UMVVM_LoadScreen::SetNumLoadSlots(int32 InNumLoadSlots)

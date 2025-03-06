@@ -3,9 +3,6 @@
 
 #include "UI/ViewModel/MVVM_LoadSlot.h"
 
-/// <summary>
-/// 
-/// </summary>
 void UMVVM_LoadSlot::InitializeSlot()
 {
 	const int32 WidgetSwticherIndex = LoadSlotStatus.GetValue();
@@ -14,6 +11,7 @@ void UMVVM_LoadSlot::InitializeSlot()
 
 void UMVVM_LoadSlot::SetPlayerName(FString InPlayerName)
 {
+	// Setter function for a Model View View Model Property value
 	UE_MVVM_SET_PROPERTY_VALUE(PlayerName, InPlayerName);
 }
 

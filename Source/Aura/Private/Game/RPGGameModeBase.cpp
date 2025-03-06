@@ -20,7 +20,7 @@ void ARPGGameModeBase::BeginPlay()
 }
 
 /// <summary>
-/// 
+/// Save Slot data with given Slot and Index
 /// </summary>
 /// <param name="LoadSlot"></param>
 /// <param name="SlotIndex"></param>
@@ -33,19 +33,23 @@ void ARPGGameModeBase::SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex)
 		UGameplayStatics::DeleteGameInSlot(LoadSlot->GetLoadSlotName(), SlotIndex);
 	}
 
+	// Creates a SaveGameObject
 	USaveGame* SaveGameObject = UGameplayStatics::CreateSaveGameObject(LoadScreenSaveGameClass);
 	ULoadScreenSaveGame* LoadScreenSaveGame = Cast<ULoadScreenSaveGame>(SaveGameObject);
 
+	// Sets variables on LoadScreenSaveGame with LoadSlot
 	LoadScreenSaveGame->PlayerName = LoadSlot->GetPlayerName();
 	LoadScreenSaveGame->SaveSlotStatus = Taken;
 	LoadScreenSaveGame->MapName = LoadSlot->GetMapName();
 	LoadScreenSaveGame->PlayerStartTag = LoadSlot->PlayerStartTag;
 	LoadScreenSaveGame->MapAssetName = LoadSlot->GetMapAssetName();
+
+	// Saves game to given slot
 	UGameplayStatics::SaveGameToSlot(LoadScreenSaveGame, LoadSlot->GetLoadSlotName(), SlotIndex);
 }
 
 /// <summary>
-/// 
+/// Deletes Save Slot
 /// </summary>
 /// <param name="SlotName"></param>
 /// <param name="SlotIndex"></param>
@@ -86,6 +90,7 @@ void ARPGGameModeBase::SaveWorldState(UWorld* World, const FString& DestinationM
 
 	if (ULoadScreenSaveGame* SaveGame = GetSaveSlotData(RGPGameInstance->LoadSlotName, RGPGameInstance->LoadSlotIndex))
 	{
+		// Checks if not an empty string
 		if (DestinationMapAssetName != FString(""))
 		{
 			SaveGame->MapAssetName = DestinationMapAssetName;
@@ -157,6 +162,7 @@ void ARPGGameModeBase::LoadWorldState(UWorld* World)
 	FString LoadSlotName = RGPGameInstance->LoadSlotName;
 	int32 LoadSlotIndex = RGPGameInstance->LoadSlotIndex;
 
+	// Checks if Save Game Exists
 	if (UGameplayStatics::DoesSaveGameExist(LoadSlotName, LoadSlotIndex))
 	{
 		ULoadScreenSaveGame* SaveGame = Cast<ULoadScreenSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadSlotName, LoadSlotIndex));
@@ -233,7 +239,7 @@ FString ARPGGameModeBase::GetMapNameFromMapAssetName(const FString& MapAssetName
 }
 
 /// <summary>
-/// 
+/// Get the player start based on tag
 /// </summary>
 /// <param name="Player"></param>
 /// <returns></returns>
@@ -266,7 +272,7 @@ AActor* ARPGGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
 }
 
 /// <summary>
-/// 
+/// Returns the data for given save slot
 /// </summary>
 /// <param name="SlotName"></param>
 /// <param name="SlotIndex"></param>

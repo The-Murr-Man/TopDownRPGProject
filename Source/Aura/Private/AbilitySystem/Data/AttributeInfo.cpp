@@ -4,9 +4,14 @@
 #include "AbilitySystem/Data/AttributeInfo.h"
 #include "RPGLogChannels.h"
 
+/// <summary>
+/// Gets attribute info for given tag
+/// </summary>
+/// <param name="AttributeTag"></param>
+/// <param name="bLogNotFound"></param>
+/// <returns></returns>
 FRPGAttributeInfo UAttributeInfo::FindAttributeInfoForTag(const FGameplayTag& AttributeTag, bool bLogNotFound) const
 {
-
 	for (const FRPGAttributeInfo Info : AttributeInformation)
 	{
 		if (Info.AttributeTag == AttributeTag)

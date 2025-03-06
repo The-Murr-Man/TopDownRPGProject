@@ -268,7 +268,8 @@ private:
 	void ShowFloatingText(const FEffectProperties& Props, float Damage, bool bBlockedHit,bool bCriticalHit);
 
 	void SendXPEvent(const FEffectProperties& Props);
-
+	void SendLifeSiphonEvent(const FEffectProperties& Props, int32 SiphonAmount);
+	void SendManaSiphonEvent(const FEffectProperties& Props, int32 SiphonAmount);
 	bool BTopOffHealth = false;
 	bool BTopOffMana = false;
 };

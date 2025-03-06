@@ -37,6 +37,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SpellGlobeSelected(const FGameplayTag& AbilityTag);
 
+	void UpdateSpellDescription(bool bEnableSpendPoints, bool bEnableEquip);
+
 	UFUNCTION(BlueprintCallable)
 	void SpellGlobeDeselected();
 

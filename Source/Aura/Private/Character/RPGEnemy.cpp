@@ -18,18 +18,22 @@ ARPGEnemy::ARPGEnemy()
 {
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
+	/// Setup ASC
 	AbilitySystemComponent = CreateDefaultSubobject<URPGAbilitySystemComponent>("AbilitySystemComponent");
 	AbilitySystemComponent->SetIsReplicated(true);
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 
+	// Turn off Controller rotations
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 
+	// Create Attribute Set
 	AttributeSet = CreateDefaultSubobject<URPGAttributeSet>("AttributeSet");
 
+	// Create Health Bar Widget
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>("HealthBar");
 	HealthBar->SetupAttachment(GetRootComponent());
 
@@ -50,10 +54,14 @@ void ARPGEnemy::PossessedBy(AController* NewController)
 	if (!HasAuthority()) return;
 	RPGAIController = Cast<ARPGAIController>(NewController);
 
+	// Initializes Blackboard on AI Controller
 	RPGAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
-	RPGAIController->RunBehaviorTree(BehaviorTree);
-	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
 
+	// Runs Behavior Tree
+	RPGAIController->RunBehaviorTree(BehaviorTree);
+
+	// Set Blackboard bools
+	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
 	RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), CharacterClass != ECharacterClass::Warrior);
 	
 }
@@ -68,6 +76,7 @@ void ARPGEnemy::BeginPlay()
 	// Check to see if player is server for startup abilities
 	if (HasAuthority())
 	{
+		// Give Startup abilities
 		URPGAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
 	}
 
@@ -102,7 +111,7 @@ void ARPGEnemy::BeginPlay()
 }
 
 /// <summary>
-/// 
+/// Calls nessasary fucntions to Initailize all actor ability info
 /// </summary>
 void ARPGEnemy::InitAbilityActorInfo()
 {
@@ -123,13 +132,18 @@ void ARPGEnemy::InitAbilityActorInfo()
 }
 
 /// <summary>
-/// 
+/// Set default attributes based on class and level
 /// </summary>
 void ARPGEnemy::InitializeDefaultAttributes()
 {
 	URPGAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
 }
 
+/// <summary>
+/// Updates stun tag
+/// </summary>
+/// <param name="CallbackTag"></param>
+/// <param name="NewCount"></param>
 void ARPGEnemy::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
 	Super::StunTagChanged(CallbackTag, NewCount);
@@ -141,7 +155,7 @@ void ARPGEnemy::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 }
 
 /// <summary>
-/// 
+/// Updates Hit React Tag
 /// </summary>
 /// <param name="CallbackTag"></param>
 /// <param name="NewCount"></param>
@@ -157,7 +171,7 @@ void ARPGEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCoun
 }
 
 /// <summary>
-/// 
+/// Highlights Actor
 /// </summary>
 void ARPGEnemy::HighlightActor_Implementation()
 {
@@ -166,7 +180,7 @@ void ARPGEnemy::HighlightActor_Implementation()
 }
 
 /// <summary>
-/// 
+/// UnHighlights Actor
 /// </summary>
 void ARPGEnemy::UnHighlightActor_Implementation()
 {
@@ -179,27 +193,45 @@ void ARPGEnemy::SetMoveToLocation_Implementation(FVector& OutLocation)
 	// Do not change out Destination
 }
 
+/// <summary>
+/// Sets combat target
+/// </summary>
+/// <param name="InCombatTarget"></param>
 void ARPGEnemy::SetCombatTarget_Implementation(AActor* InCombatTarget)
 {
 	CombatTarget = InCombatTarget;
 }
 
+/// <summary>
+/// Returns Combat Target
+/// </summary>
+/// <returns></returns>
 AActor* ARPGEnemy::GetCombatTarget_Implementation() const
 {
 	return CombatTarget;
 }
 
+/// <summary>
+/// Returns Players Level
+/// </summary>
+/// <returns></returns>
 int32 ARPGEnemy::GetPlayerLevel_Implementation()
 {
 	return Level;
 }
 
+/// <summary>
+/// Handles Death functionality
+/// </summary>
+/// <param name="DeathImpulse"></param>
 void ARPGEnemy::Die(const FVector& DeathImpulse)
 {
 	SetLifeSpan(LifeSpan);
 
+	// Update blackboard bool for death
 	if (RPGAIController) RPGAIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"),true);
 
+	// Spawn loot
 	SpawnLoot();
 	Super::Die(DeathImpulse);
 }

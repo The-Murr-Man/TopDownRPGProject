@@ -6,11 +6,11 @@
 #include "AbilitySystem/RPGAbilitySystemComponent.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "Player/RPGPlayerState.h"
-#include "AbilitySystem/Data/LevelUpInfo.h"
+
 #include "RPGGameplayTags.h"
 
 /// <summary>
-/// 
+/// Broadcasts health and mana values
 /// </summary>
 void UOverlayWidgetController::BroadcastInitialValues()
 {
@@ -22,24 +22,25 @@ void UOverlayWidgetController::BroadcastInitialValues()
 }
 
 /// <summary>
-/// 
+/// Bind all callback needed
 /// </summary>
 void UOverlayWidgetController::BindCallbacksToDependencies()
 {
+	BindAttributeChange(GetRPGAS()->GetHealthAttribute(), OnHealthChanged);
+	BindAttributeChange(GetRPGAS()->GetMaxHealthAttribute(), OnMaxHealthChanged);
+	BindAttributeChange(GetRPGAS()->GetManaAttribute(), OnManaChanged);
+	BindAttributeChange(GetRPGAS()->GetMaxManaAttribute(), OnMaxManaChanged);
+
 	// Callback for changing xp
 	GetRPGPS()->OnXPChangedDelegate.AddUObject(this, &UOverlayWidgetController::OnXPChanged);
 
+	// Lambda to updated level changed
 	GetRPGPS()->OnLevelChangedDelegate.AddLambda(
 		[this](int32 NewLevel, bool bLevelUp)
 		{
 			OnPlayerLevelChangedDelegate.Broadcast(NewLevel, bLevelUp);
 		}
 	);
-	
-	BindAttributeChange(GetRPGAS()->GetHealthAttribute(), OnHealthChanged);
-	BindAttributeChange(GetRPGAS()->GetMaxHealthAttribute(), OnMaxHealthChanged);
-	BindAttributeChange(GetRPGAS()->GetManaAttribute(), OnManaChanged);
-	BindAttributeChange(GetRPGAS()->GetMaxManaAttribute(), OnMaxManaChanged);
 
 	if (GetRPGASC())
 	{
@@ -69,7 +70,7 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 }
 
 /// <summary>
-/// 
+/// Binds the callback for an attribute being changed
 /// </summary>
 /// <param name="Attribute"></param>
 /// <param name="AttributeData"></param>
@@ -84,7 +85,7 @@ void UOverlayWidgetController::BindAttributeChange(FGameplayAttribute Attribute,
 }
 
 /// <summary>
-/// 
+/// Callback for when the xp is being changed
 /// </summary>
 /// <param name="NewXP"></param>
 void UOverlayWidgetController::OnXPChanged(int32 NewXP)
@@ -96,6 +97,7 @@ void UOverlayWidgetController::OnXPChanged(int32 NewXP)
 	int32 Level = LevelUpInfo->FindLevelForXP(NewXP);
 	int32 MaxLevel = LevelUpInfo->LevelUpInformation.Num();
 
+	// Updates XP and broadcasts the percent
 	if (Level <= MaxLevel && Level > 0)
 	{
 		int32 LevelUpRequirment = LevelUpInfo->LevelUpInformation[Level].LevelUpRequirment;
@@ -106,10 +108,17 @@ void UOverlayWidgetController::OnXPChanged(int32 NewXP)
 
 		float XPBarPercent = static_cast<float>(XPForThisLevel) / static_cast<float>(DeltaLevelUpRequirment);
 
-		OnXPPercentChangedDelegate.Broadcast(XPBarPercent);
+		OnXPPercentChangedDelegate.Broadcast(XPBarPercent, NewXP, LevelUpRequirment);
 	}
 }
 
+/// <summary>
+/// Handles functionality for equipping an ability
+/// </summary>
+/// <param name="AbilityTag"></param>
+/// <param name="Status"></param>
+/// <param name="Slot"></param>
+/// <param name="PreviousSlot"></param>
 void UOverlayWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& Status, const FGameplayTag& Slot, const FGameplayTag& PreviousSlot)
 {
 	const FRPGGameplayTags& GameplayTags = FRPGGameplayTags::Get();
@@ -131,3 +140,5 @@ void UOverlayWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTag,
 
 	AbilityInfoDelegate.Broadcast(CurrentSlotInfo);
 }
+
+

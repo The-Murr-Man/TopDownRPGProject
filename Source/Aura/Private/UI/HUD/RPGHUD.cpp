@@ -8,7 +8,7 @@
 #include "UI/WidgetController/SpellMenuWidgetController.h"
 
 /// <summary>
-/// TODO:
+/// Returns the OverlayWidgetController or creates a new one if its null
 /// </summary>
 /// <param name="WCParams"></param>
 /// <returns></returns>
@@ -27,7 +27,7 @@ UOverlayWidgetController* ARPGHUD::GetOverlayWidgetController(const FWidgetContr
 }
 
 /// <summary>
-/// TODO:
+/// Returns the AttributeMenuWidgetController or creates a new one if its null
 /// </summary>
 /// <param name="WCParams"></param>
 /// <returns></returns>
@@ -46,7 +46,7 @@ UAttributeMenuWidgetController* ARPGHUD::GetAttributeMenuWidgetController(const 
 }
 
 /// <summary>
-/// TODO:
+/// Returns the SpellMenuWidgetController or creates a new one if its null
 /// </summary>
 /// <param name="WCParams"></param>
 /// <returns></returns>
@@ -65,7 +65,7 @@ USpellMenuWidgetController* ARPGHUD::GetSpellMenuWidgetController(const FWidgetC
 }
 
 /// <summary>
-/// TODO:
+/// Creates the Overlay and adds it to viewport
 /// </summary>
 /// <param name="PC"></param>
 /// <param name="PS"></param>

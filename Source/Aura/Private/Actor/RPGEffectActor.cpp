@@ -74,6 +74,11 @@ void ARPGEffectActor::ItemMovement(float DeltaTime)
 	}
 }
 
+/// <summary>
+/// Applies Effect to Target
+/// </summary>
+/// <param name="TargetActor"></param>
+/// <param name="GameplayEffectClass"></param>
 void ARPGEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGameplayEffect> GameplayEffectClass)
 {
 	if (TargetActor->ActorHasTag("Enemy") && !bApplyEffectToEnemies) return;
@@ -84,14 +89,19 @@ void ARPGEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGame
 
 	checkf(GameplayEffectClass, TEXT("GameplayEffectClass is uninitialized, please set GameplayEffectClass"));
 
+	// Makes Effect Context
 	FGameplayEffectContextHandle EffectContextHandle =  TargetASC->MakeEffectContext();
 	EffectContextHandle.AddSourceObject(this);
 
+	// Makes Outgoing Spec
 	FGameplayEffectSpecHandle EffectSpecHandle =  TargetASC->MakeOutgoingSpec(GameplayEffectClass, ActorLevel, EffectContextHandle);
+
+	// Applies Gameplay Effect Spec to Self
 	FActiveGameplayEffectHandle ActiveEffectHandle =  TargetASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
 
-
 	const bool bIsInfinite = EffectSpecHandle.Data.Get()->Def.Get()->DurationPolicy == EGameplayEffectDurationType::Infinite;
+
+	// Checks if the effect is infinite
 	if (bIsInfinite && InfiniteEffectRemovalPolicy == EEffectRemovalPolicy::RemoveOnEndOverlap)
 	{
 		ActiveEffectHandles.Add(ActiveEffectHandle, TargetASC);
@@ -103,6 +113,10 @@ void ARPGEffectActor::ApplyEffectToTarget(AActor* TargetActor, TSubclassOf<UGame
 	}
 }
 
+/// <summary>
+/// Handles Functionality of overlapping
+/// </summary>
+/// <param name="TargetActor"></param>
 void ARPGEffectActor::OnOverlap(AActor* TargetActor)
 {
 	if (TargetActor->ActorHasTag("Enemy") && !bApplyEffectToEnemies) return;
@@ -126,6 +140,10 @@ void ARPGEffectActor::OnOverlap(AActor* TargetActor)
 	}
 }
 
+/// <summary>
+/// Handles Functionality of ending overlap
+/// </summary>
+/// <param name="TargetActor"></param>
 void ARPGEffectActor::OnEndOverlap(AActor* TargetActor)
 {
 	if (TargetActor->ActorHasTag("Enemy") && !bApplyEffectToEnemies) return;

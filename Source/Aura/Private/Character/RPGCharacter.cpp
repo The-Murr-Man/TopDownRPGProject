@@ -19,6 +19,7 @@
 #include "Game/RPGGameInstance.h"
 #include "Game/LoadScreenSaveGame.h"
 #include "AbilitySystem/RPGAttributeSet.h"
+#include "GameplayEffectExecutionCalculation.h"
 
 /// <summary>
 /// 
@@ -72,7 +73,7 @@ void ARPGCharacter::PossessedBy(AController* NewController)
 }
 
 /// <summary>
-/// 
+/// Loads progress from Save Data on GameMode
 /// </summary>
 void ARPGCharacter::LoadProgress()
 {
@@ -85,19 +86,25 @@ void ARPGCharacter::LoadProgress()
 
 	//if (!SaveData) return;
 
+	// Check if the its the player first time loading in
 	if (SaveData->bFirstTimeLoadIn)
 	{
+		// Add default Attributes and abilities
 		InitializeDefaultAttributes();
 		AddCharacterAbilities();
 	}
 
+	// Load from save data
 	else
 	{
+		// Cast to custom ASC
 		if (URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent))
 		{
+			// Add abilities from save data
 			RPGASC->AddCharacterAbilitiesFromSaveData(SaveData);
 		}
 		
+		// Cast to cutsom PC
 		if (ARPGPlayerState* RPGPlayerState = Cast<ARPGPlayerState>(GetPlayerState()))
 		{
 			// Saving data from the player state
@@ -112,7 +119,7 @@ void ARPGCharacter::LoadProgress()
 }
 
 /// <summary>
-/// 
+/// Initialize Actors Ability Info
 /// </summary>
 void ARPGCharacter::InitAbilityActorInfo()
 {
@@ -120,29 +127,34 @@ void ARPGCharacter::InitAbilityActorInfo()
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
 
 	if (!RpgPlayerState) return;
+
+	// Call ASC Version
 	RpgPlayerState->GetAbilitySystemComponent()->InitAbilityActorInfo(RpgPlayerState, this);
+
 	Cast<URPGAbilitySystemComponent>(RpgPlayerState->GetAbilitySystemComponent())->AbilityActorInfoSet();
 
 	// Gets and sets ability system component and attribute set from player state
 	AbilitySystemComponent = RpgPlayerState->GetAbilitySystemComponent();
 	AttributeSet = RpgPlayerState->GetAttributeSet();
 
+	// Broadcast ASC Registered
 	OnASCRegistered.Broadcast(AbilitySystemComponent);
 	AbilitySystemComponent->RegisterGameplayTagEvent(FRPGGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ARPGCharacter::StunTagChanged);
 
+	// Cast to Custom PC
 	if (ARPGPlayerController* RPGPlayerContoller = Cast<ARPGPlayerController>(GetController()))
 	{
+		// Cast to HUD
 		if (ARPGHUD* RPGHUD = Cast<ARPGHUD>(RPGPlayerContoller->GetHUD()))
 		{
+			// Initialize our overlay
 			RPGHUD->InitOverlay(RPGPlayerContoller, RpgPlayerState, AbilitySystemComponent, AttributeSet);
 		}
 	}
-
-	//InitializeDefaultAttributes();
 }
 
 /// <summary>
-/// 
+/// Replicate PlayerState
 /// </summary>
 void ARPGCharacter::OnRep_PlayerState()
 {
@@ -153,7 +165,7 @@ void ARPGCharacter::OnRep_PlayerState()
 }
 
 /// <summary>
-/// 
+/// Shows Magic Cicle
 /// </summary>
 /// <param name="DecalMaterial"></param>
 void ARPGCharacter::ShowMagicCircle_Implementation(UMaterialInterface* DecalMaterial)
@@ -168,7 +180,7 @@ void ARPGCharacter::ShowMagicCircle_Implementation(UMaterialInterface* DecalMate
 }
 
 /// <summary>
-/// 
+/// Hide Magic Circle
 /// </summary>
 void ARPGCharacter::HideMagicCircle_Implementation()
 {
@@ -182,7 +194,7 @@ void ARPGCharacter::HideMagicCircle_Implementation()
 }
 
 /// <summary>
-/// 
+/// Save Player Progress
 /// </summary>
 /// <param name="CheckpointTag"></param>
 void ARPGCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
@@ -196,6 +208,7 @@ void ARPGCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
 
 	if (!SaveData) return;
 
+	// Sets checkpoint tag
 	SaveData->PlayerStartTag = CheckpointTag;
 	
 	if (ARPGPlayerState* RPGPlayerState = Cast<ARPGPlayerState>(GetPlayerState()))
@@ -207,40 +220,28 @@ void ARPGCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
 		SaveData->AttributePoints = RPGPlayerState->GetPlayerAttributePoints();
 	}
 
+	// Remove Any Infinite Effects that boost Attributes
+	URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent);
+
 	//Saving our vital attributes (All other attributes are based on the vital attribute so no need to save them)
-	SaveData->StrengthAttribute = URPGAttributeSet::GetStrengthAttribute().GetNumericValue(GetAttributeSet());
-	SaveData->IntellegenceAttribute = URPGAttributeSet::GetIntellegenceAttribute().GetNumericValue(GetAttributeSet());
-	SaveData->ResilienceAttribute = URPGAttributeSet::GetResilienceAttribute().GetNumericValue(GetAttributeSet());
-	SaveData->VigorAttribute = URPGAttributeSet::GetVigorAttribute().GetNumericValue(GetAttributeSet());
+	SaveData->StrengthAttribute = URPGAttributeSet::GetStrengthAttribute().GetGameplayAttributeData(GetAttributeSet())->GetBaseValue();
+	SaveData->IntellegenceAttribute = URPGAttributeSet::GetIntellegenceAttribute().GetGameplayAttributeData(GetAttributeSet())->GetBaseValue();
+	SaveData->ResilienceAttribute = URPGAttributeSet::GetResilienceAttribute().GetGameplayAttributeData(GetAttributeSet())->GetBaseValue();
+	SaveData->VigorAttribute = URPGAttributeSet::GetVigorAttribute().GetGameplayAttributeData(GetAttributeSet())->GetBaseValue();
 
 	SaveData->bFirstTimeLoadIn = false;
 
 	if (!HasAuthority()) return;
-
-	URPGAbilitySystemComponent* RPGASC = Cast<URPGAbilitySystemComponent>(AbilitySystemComponent);
 
 	FForEachAbility SaveAbilityDelegate;
 
 	// Empty out the array
 	SaveData->SavedAbilities.Empty();
 
+	// Saves Ability
 	SaveAbilityDelegate.BindLambda([this, RPGASC, SaveData](const FGameplayAbilitySpec& AbilitySpec)
 	{
-		const FGameplayTag AbilityTag = RPGASC->GetAbilityTagFromSpec(AbilitySpec);
-
-		UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(this);
-
-		FRPGAbilityInfo RPGInfo = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
-
-		FSavedAbility SavedAbility;
-		
-		SavedAbility.GameplayAbility = RPGInfo.Ability;
-		SavedAbility.AbilityLevel = AbilitySpec.Level;
-		SavedAbility.AbilitySlot = RPGASC->GetSlotFromAbilityTag(AbilityTag);
-		SavedAbility.AbilityStatus = RPGASC->GetStatusFromAbilityTag(AbilityTag);
-		SavedAbility.AbilityTag = AbilityTag;
-		SavedAbility.AbilityType = RPGInfo.AbilityType;
-		SaveData->SavedAbilities.AddUnique(SavedAbility);
+		SaveAbility(RPGASC, AbilitySpec, SaveData);
 	});
 
 	// Broadcasts the SaveAbilityDelegate for each ability in our ability array
@@ -252,7 +253,33 @@ void ARPGCharacter::SaveProgress_Implementation(const FName& CheckpointTag)
 }
 
 /// <summary>
-/// 
+/// Saves character abilities
+/// </summary>
+/// <param name="RPGASC"></param>
+/// <param name="AbilitySpec"></param>
+/// <param name="SaveData"></param>
+void ARPGCharacter::SaveAbility(URPGAbilitySystemComponent* RPGASC, const FGameplayAbilitySpec& AbilitySpec, ULoadScreenSaveGame* SaveData)
+{
+	// Create needed variables
+	const FGameplayTag AbilityTag = RPGASC->GetAbilityTagFromSpec(AbilitySpec);
+	UAbilityInfo* AbilityInfo = URPGAbilitySystemLibrary::GetAbilityInfo(this);
+	FRPGAbilityInfo RPGInfo = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+	FSavedAbility SavedAbility;
+
+	// Set all SavedAbility infomation
+	SavedAbility.GameplayAbility = RPGInfo.Ability;
+	SavedAbility.AbilityLevel = AbilitySpec.Level;
+	SavedAbility.AbilitySlot = RPGASC->GetSlotFromAbilityTag(AbilityTag);
+	SavedAbility.AbilityStatus = RPGASC->GetStatusFromAbilityTag(AbilityTag);
+	SavedAbility.AbilityTag = AbilityTag;
+	SavedAbility.AbilityType = RPGInfo.AbilityType;
+
+	// Add SavedAbility to SavedAbilities
+	SaveData->SavedAbilities.AddUnique(SavedAbility);
+}
+
+/// <summary>
+/// Returns Player Level
 /// </summary>
 /// <returns></returns>
 int32 ARPGCharacter::GetPlayerLevel_Implementation()
@@ -264,7 +291,7 @@ int32 ARPGCharacter::GetPlayerLevel_Implementation()
 }
 
 /// <summary>
-/// 
+/// Handles character death
 /// </summary>
 /// <param name="DeathImpulse"></param>
 void ARPGCharacter::Die(const FVector& DeathImpulse)
@@ -274,7 +301,7 @@ void ARPGCharacter::Die(const FVector& DeathImpulse)
 	// Handle Death
 	FTimerDelegate DeathTimerDelegate;
 
-	// TODO: Swap To Callback Function
+	// Calls GameModes PlayerDied
 	DeathTimerDelegate.BindLambda([this]()
 	{
 		ARPGGameModeBase* RPGGameMode = Cast<ARPGGameModeBase>(UGameplayStatics::GetGameMode(this));
@@ -284,13 +311,15 @@ void ARPGCharacter::Die(const FVector& DeathImpulse)
 		}
 	});
 
+	// Sets timer
 	GetWorldTimerManager().SetTimer(DeathTimer, DeathTimerDelegate, DeathTime, false);
-	CameraComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
+	// Detaches Camera
+	CameraComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 }
 
 /// <summary>
-/// 
+/// Adds To Experience
 /// </summary>
 /// <param name="InXP"></param>
 void ARPGCharacter::AddToXP_Implementation(int32 InXP)
@@ -302,7 +331,7 @@ void ARPGCharacter::AddToXP_Implementation(int32 InXP)
 }
 
 /// <summary>
-/// 
+/// Adds to the players level
 /// </summary>
 /// <param name="InPlayerLevel"></param>
 void ARPGCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
@@ -320,7 +349,7 @@ void ARPGCharacter::AddToPlayerLevel_Implementation(int32 InPlayerLevel)
 }
 
 /// <summary>
-/// 
+/// Adds to attributes points
 /// </summary>
 /// <param name="InAttributePoints"></param>
 void ARPGCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints)
@@ -331,6 +360,10 @@ void ARPGCharacter::AddToAttributePoints_Implementation(int32 InAttributePoints)
 	RpgPlayerState->AddToAttributePoints(InAttributePoints);
 }
 
+/// <summary>
+/// Adds to spell points
+/// </summary>
+/// <param name="InSpellPoints"></param>
 void ARPGCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints)
 {
 	ARPGPlayerState* RpgPlayerState = GetPlayerState<ARPGPlayerState>();
@@ -340,7 +373,7 @@ void ARPGCharacter::AddToSpellPoints_Implementation(int32 InSpellPoints)
 }
 
 /// <summary>
-/// 
+/// Handles Level UP
 /// </summary>
 void ARPGCharacter::LevelUp_Implementation()
 {
@@ -348,7 +381,7 @@ void ARPGCharacter::LevelUp_Implementation()
 }
 
 /// <summary>
-/// 
+/// Handles the particles for level up
 /// </summary>
 void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
 {
@@ -364,7 +397,7 @@ void ARPGCharacter::MulticastLevelUpParticles_Implementation() const
 }
 
 /// <summary>
-/// 
+/// Replicated function for setting Stunned
 /// </summary>
 void ARPGCharacter::OnRep_Stunned()
 {
@@ -372,11 +405,14 @@ void ARPGCharacter::OnRep_Stunned()
 	{
 		const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
 		FGameplayTagContainer BlockedTags;
+
+		// Blocks input
 		BlockedTags.AddTag(GameplayTags.Player_Block_CursorTrace);
 		BlockedTags.AddTag(GameplayTags.Player_Block_InputHeld);
 		BlockedTags.AddTag(GameplayTags.Player_Block_InputPressed);
 		BlockedTags.AddTag(GameplayTags.Player_Block_InputReleased);
 
+		// Check if Stunned
 		if (bIsStunned)
 		{
 			RPGASC->AddLooseGameplayTags(BlockedTags);
@@ -391,6 +427,9 @@ void ARPGCharacter::OnRep_Stunned()
 	}
 }
 
+/// <summary>
+/// Replicated function for setting Burned
+/// </summary>
 void ARPGCharacter::OnRep_Burned()
 {
 	if (bIsBurned)
@@ -405,7 +444,7 @@ void ARPGCharacter::OnRep_Burned()
 }
 
 /// <summary>
-/// 
+/// Returns XP
 /// </summary>
 /// <returns></returns>
 int32 ARPGCharacter::GetXP_Implementation() const
@@ -416,7 +455,7 @@ int32 ARPGCharacter::GetXP_Implementation() const
 }
 
 /// <summary>
-/// 
+/// Returns spell points
 /// </summary>
 /// <returns></returns>
 int32 ARPGCharacter::GetAttributePoints_Implementation() const
@@ -427,7 +466,7 @@ int32 ARPGCharacter::GetAttributePoints_Implementation() const
 }
 
 /// <summary>
-/// 
+///  Returns spell points
 /// </summary>
 /// <returns></returns>
 int32 ARPGCharacter::GetSpellPoints_Implementation() const
@@ -438,7 +477,7 @@ int32 ARPGCharacter::GetSpellPoints_Implementation() const
 }
 
 /// <summary>
-/// 
+///  Returns attribute points rewarded for given level
 /// </summary>
 /// <param name="Level"></param>
 /// <returns></returns>
@@ -451,7 +490,7 @@ int32 ARPGCharacter::GetAttributePointsReward_Implementation(int32 Level) const
 }
 
 /// <summary>
-/// 
+/// Returns Spell points rewarded for given level
 /// </summary>
 /// <param name="Level"></param>
 /// <returns></returns>
@@ -464,7 +503,7 @@ int32 ARPGCharacter::GetSpellPointsReward_Implementation(int32 Level) const
 }
 
 /// <summary>
-/// 
+/// Return Level for given XP
 /// </summary>
 /// <param name="InXP"></param>
 /// <returns></returns>
@@ -475,12 +514,3 @@ int32 ARPGCharacter::FindLevelForXP_Implementation(int32 InXP) const
 
 	return RpgPlayerState->LevelUpInfo->FindLevelForXP(InXP);
 }
-
-
-
-
-
-
-
-
-

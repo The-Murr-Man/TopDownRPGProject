@@ -5,7 +5,7 @@
 #include "AbilitySystemComponent.h"
 
 /// <summary>
-/// 
+/// Waits for cooldown to change
 /// </summary>
 /// <param name="AbilitySystemComponent"></param>
 /// <param name="InCooldownTag"></param>
@@ -44,7 +44,7 @@ void UWaitCooldownChange::EndTask()
 }
 
 /// <summary>
-/// 
+/// Broadcasts Cooldown Changed
 /// </summary>
 /// <param name="InCooldownTag"></param>
 /// <param name="NewCount"></param>
@@ -54,8 +54,6 @@ void UWaitCooldownChange::CooldownTagChanged(const FGameplayTag InCooldownTag, i
     {
         CooldownEnd.Broadcast(0.f);
     }
-
-
 }
 
 /// <summary>

@@ -7,7 +7,7 @@
 #include "Interaction/CombatInterface.h"
 
 /// <summary>
-/// 
+/// Causes damage to actor
 /// </summary>
 /// <param name="TargetActor"></param>
 void URPGDamageGameplayAbility::CauseDamage(AActor* TargetActor)
@@ -22,7 +22,7 @@ void URPGDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 }
 
 /// <summary>
-/// 
+/// Returns a random montage
 /// </summary>
 /// <param name="TaggedMontages"></param>
 /// <returns></returns>

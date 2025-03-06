@@ -8,6 +8,10 @@
 #include "AbilitySystem/RPGAttributeSet.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 
+/// <summary>
+/// Sets the parameters for thw widget controller
+/// </summary>
+/// <param name="WCParams"></param>
 void URPGWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WCParams)
 {
 	PlayerController = WCParams.PlayerController;
@@ -16,16 +20,25 @@ void URPGWidgetController::SetWidgetControllerParams(const FWidgetControllerPara
 	AbilitySystemComponent = WCParams.AbilitySystemComponent;
 }
 
+/// <summary>
+/// Meant to be overridden
+/// </summary>
 void URPGWidgetController::BroadcastInitialValues()
 {
 
 }
 
+/// <summary>
+/// Meant to be overridden
+/// </summary>
 void URPGWidgetController::BindCallbacksToDependencies()
 {
 
 }
 
+/// <summary>
+/// Broadcasts the Input and status tags for given ability
+/// </summary>
 void URPGWidgetController::BroadcastAbilityInfo()
 {
 	if (!GetRPGASC()->bStartupAbilitiesGiven) return;
@@ -39,6 +52,7 @@ void URPGWidgetController::BroadcastAbilityInfo()
 			AbilityInfoDelegate.Broadcast(Info);
 		});
 
+	// Call the BroadcastDelegate for each ability in Startup abilities
 	GetRPGASC()->ForEachAbility(BroadcastDelegate);
 }
 

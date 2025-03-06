@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "UI/WidgetController/RPGWidgetController.h"
 #include "GameplayTagContainer.h"
+#include "Player/RPGPlayerState.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
 #include "Engine/DataTable.h"
 #include "OverlayWidgetController.generated.h"
 
@@ -14,6 +16,7 @@ struct FOnAttributeChangeData;
 struct FGameplayAttribute;
 class UAbilityInfo;
 class URPGAbilitySystemComponent;
+struct FRPGLevelUpInfo;
 
 USTRUCT(BlueprintType)
 struct FUIWidgetRow : public FTableRowBase
@@ -39,8 +42,8 @@ struct FUIWidgetRow : public FTableRowBase
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedSignature, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLevelChangedSignature, int32, NewLevel, bool, bLevelUp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageWidgetRowSigniture, FUIWidgetRow, Row);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnXPChangedSignature, float, NewPercent, float, CurrentXP, float, NeededXP);
 //
-
 
 /**
  * 
@@ -71,7 +74,7 @@ public:
 
 	// XP
 	UPROPERTY(BlueprintAssignable, Category = "GAS|XP")
-	FOnAttributeChangedSignature OnXPPercentChangedDelegate;
+	FOnXPChangedSignature OnXPPercentChangedDelegate;
 
 	// Level
 	UPROPERTY(BlueprintAssignable, Category = "GAS|Level")
@@ -93,6 +96,9 @@ protected:
 
 	void OnXPChanged(int32 NewXP);
 	void OnAbilityEquipped(const FGameplayTag& AbilityTag, const FGameplayTag& Status, const FGameplayTag& Slot, const FGameplayTag& PreviousSlot);
+	
+	UFUNCTION(BlueprintCallable)
+	int32 GetLevelUpRequirment(int32 Level) { return GetRPGPS()->LevelUpInfo->LevelUpInformation[Level].LevelUpRequirment; }
 };
 
 template<typename T>

@@ -14,7 +14,7 @@
 #include "Game/LoadScreenSaveGame.h"
 
 /// <summary>
-/// 
+/// Creates MakeWidgetControllerParams from given AS,ASC,PC,PS
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -41,7 +41,7 @@ bool URPGAbilitySystemLibrary::MakeWidgetControllerParams(const UObject* WorldCo
 }
 
 /// <summary>
-/// 
+/// Sets Initial Values for Attributes based off character class
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <param name="CharacterClass"></param>
@@ -107,6 +107,12 @@ void URPGAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldC
 	*/
 }
 
+/// <summary>
+/// Sets the saved initial values of Attributes
+/// </summary>
+/// <param name="WorldContextObject"></param>
+/// <param name="ASC"></param>
+/// <param name="SaveGame"></param>
 void URPGAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame)
 {
 	// Assign CharacterClassInfo from the GameMode
@@ -152,7 +158,7 @@ void URPGAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(const UOb
 }
 
 /// <summary>
-/// 
+/// Iterates through Arrays of abilities to give on startup and gives them to the ASC
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <param name="ASC"></param>
@@ -163,21 +169,27 @@ void URPGAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextO
 	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 	if (!CharacterClassInfo) return;
 
+	// Loops through CommonAbilities
 	for (TSubclassOf<UGameplayAbility> AbilityClass : CharacterClassInfo->CommonAbilities)
 	{
+		//Creates Spec from AbilityClass and Level
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, 1);
 
+		// Give the Ability to the ASC
 		ASC->GiveAbility(AbilitySpec);
 	}
 
 	const FCharacterClassDefaultInfo DefaultInfo = CharacterClassInfo->GetClassDefaultInfo(CharacterClass);
 
+	// Loops through StartupAbilities
 	for (TSubclassOf<UGameplayAbility> AbilityClass : DefaultInfo.StartupAbilities)
 	{
 		if (ASC->GetAvatarActor()->Implements<UCombatInterface>())
 		{
+			//Creates Spec from AbilityClass and Level
 			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(AbilityClass, ICombatInterface::Execute_GetPlayerLevel(ASC->GetAvatarActor()));
 
+			// Give the Ability to the ASC
 			ASC->GiveAbility(AbilitySpec);
 		}
 	}
@@ -209,16 +221,21 @@ bool URPGAbilitySystemLibrary::IsNotFriend(AActor* FirstActor, AActor* SecondAct
 /// <returns></returns>
 TArray<FGameplayTag> URPGAbilitySystemLibrary::CallerMagnitudeTags(TSubclassOf<UGameplayEffect> GameplayEffect)
 {
+	// Create new GameplayEffect
 	UGameplayEffect* GE = NewObject<UGameplayEffect>(GetTransientPackage(), GameplayEffect);
 
+	// Create new GameplayModifier
 	TArray<FGameplayModifierInfo> ModifierInfo = GE->Modifiers;
 
 	TArray<FGameplayTag> CallerTags;
 
+	// Loops through ModifierInfo
 	for (FGameplayModifierInfo Info : ModifierInfo)
 	{
+		// if Info has the type SetByCaller
 		if (Info.ModifierMagnitude.GetMagnitudeCalculationType() == EGameplayEffectMagnitudeCalculation::SetByCaller)
 		{
+			// Add the DataTag to the CallerTags array
 			CallerTags.Add(Info.ModifierMagnitude.GetSetByCallerFloat().DataTag);
 		}
 	}
@@ -227,7 +244,7 @@ TArray<FGameplayTag> URPGAbilitySystemLibrary::CallerMagnitudeTags(TSubclassOf<U
 }
 
 /// <summary>
-/// 
+/// Applies a DamageEffect based off Given Params
 /// </summary>
 /// <param name="DamageEffectParams"></param>
 /// <returns></returns>
@@ -236,13 +253,14 @@ FGameplayEffectContextHandle URPGAbilitySystemLibrary::ApplyDamageEffect(const F
 	const FRPGGameplayTags GameplayTags = FRPGGameplayTags::Get();
 	const AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
 
+	// Creates EffectContextHandle
 	FGameplayEffectContextHandle EffectContextHandle = DamageEffectParams.SourceAbilitySystemComponent->MakeEffectContext();
 	EffectContextHandle.AddSourceObject(SourceAvatarActor);
 
+	// Sets the DeathImpulse from DamageEffectParams
 	SetDeathImpulse(EffectContextHandle, DamageEffectParams.DeathImpulse);
 
-	SetKnockbackForce(EffectContextHandle, DamageEffectParams.KnockbackForce);
-
+	// Sets Whether the damage is radial from DamageEffectParams
 	SetIsRadialDamage(EffectContextHandle, DamageEffectParams.bIsRadialDamage);
 	
 	// Dont need to worry about checking if bIsRadialDamage, Check happends in Effect Context
@@ -250,6 +268,7 @@ FGameplayEffectContextHandle URPGAbilitySystemLibrary::ApplyDamageEffect(const F
 	SetRadialDamageOuterRadius(EffectContextHandle, DamageEffectParams.RadialDamageOuterRadius);
 	SetRadialDamageOrigin(EffectContextHandle, DamageEffectParams.RadialDamageOrigin);
 
+	// Creates SpecHandle
 	FGameplayEffectSpecHandle SpecHandle = DamageEffectParams.SourceAbilitySystemComponent->MakeOutgoingSpec(DamageEffectParams.DamageGameplayEffectClass, DamageEffectParams.AbilityLevel, EffectContextHandle);
 
 	// Sets the Damage SetByCallerMagnitude
@@ -261,13 +280,14 @@ FGameplayEffectContextHandle URPGAbilitySystemLibrary::ApplyDamageEffect(const F
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Debuff_Frequency, DamageEffectParams.DebuffFrequency);
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Debuff_Duration, DamageEffectParams.DebuffDuration);
 
+	// Applies the GA Spec to self
 	DamageEffectParams.TargetAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
 
 	return EffectContextHandle;
 }
 
 /// <summary>
-/// 
+/// Calculates the spread of rotators (Used for projectiles)
 /// </summary>
 /// <param name="Forward"></param>
 /// <param name="Axis"></param>
@@ -300,7 +320,7 @@ TArray<FRotator> URPGAbilitySystemLibrary::EvenlySpacedRotators(const FVector& F
 }
 
 /// <summary>
-/// 
+/// Calculates the spread of Vectors (Used for projectiles)
 /// </summary>
 /// <param name="Forward"></param>
 /// <param name="Axis"></param>
@@ -333,7 +353,7 @@ TArray<FVector> URPGAbilitySystemLibrary::EvenlyRotatedVectors(const FVector& Fo
 }
 
 /// <summary>
-/// 
+/// Calculates radial damage based off distance from origin
 /// </summary>
 /// <param name="EffectContextHandle"></param>
 /// <param name="Damage"></param>
@@ -371,7 +391,7 @@ float URPGAbilitySystemLibrary::CalculateRadialDamage(const FGameplayEffectConte
 }
 
 /// <summary>
-/// 
+/// Returns the LootTiers from the GameMode
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -385,11 +405,6 @@ ULootTiers* URPGAbilitySystemLibrary::GetLootTiers(const UObject* WorldContextOb
 
 /*Setters ------------------------------------------------------------->*/
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="EffectContextHandle, Passed in as a UPARAM(ref) to make it an input parameter"></param>
-/// <param name="bInIsBlockedHit"></param>
 void URPGAbilitySystemLibrary::SetIsBlockedHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bInIsBlockedHit)
 {
 	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -398,11 +413,6 @@ void URPGAbilitySystemLibrary::SetIsBlockedHit(UPARAM(ref) FGameplayEffectContex
 	}
 }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="EffectContextHandle, Passed in as a UPARAM(ref) to make it an input parameter "></param> 
-/// <param name="bInIsCriticalHit"></param>
 void URPGAbilitySystemLibrary::SetIsCriticalHit(UPARAM(ref)FGameplayEffectContextHandle& EffectContextHandle, bool bInIsCriticalHit)
 {
 	if (FRPGGameplayEffectContext* RPGContext = static_cast<FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -503,7 +513,7 @@ void URPGAbilitySystemLibrary::SetRadialDamageOrigin(UPARAM(ref)FGameplayEffectC
 /*Getters ------------------------------------------------------------->*/
 
 /// <summary>
-/// 
+/// Returns the OverlayWidgetController
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -521,7 +531,7 @@ UOverlayWidgetController* URPGAbilitySystemLibrary::GetOverlayWidgetController(c
 }
 
 /// <summary>
-/// 
+/// Returns the AttributeMenuWidgetController
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -539,7 +549,7 @@ UAttributeMenuWidgetController* URPGAbilitySystemLibrary::GetAttributeMenuWidget
 }
 
 /// <summary>
-/// 
+/// Returns the SpellMenuWidgetController
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -576,7 +586,7 @@ int32 URPGAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* World
 }
 
 /// <summary>
-/// 
+/// Returns all Alive players within a given radius
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <param name="OutOverlappingActors"></param>
@@ -605,6 +615,13 @@ void URPGAbilitySystemLibrary::GetLivePlayersWithinRadius(const UObject* WorldCo
 	}
 }
 
+/// <summary>
+/// Return the closest targets from an array of actors
+/// </summary>
+/// <param name="MaxTargets"></param>
+/// <param name="Actors"></param>
+/// <param name="OutClosestTargets"></param>
+/// <param name="Origin"></param>
 void URPGAbilitySystemLibrary::GetClosestTargets(int32 MaxTargets, const TArray<AActor*>& Actors, TArray<AActor*>& OutClosestTargets, const FVector& Origin)
 {
 	//Check if MaxTargets or Actors and return
@@ -636,7 +653,7 @@ void URPGAbilitySystemLibrary::GetClosestTargets(int32 MaxTargets, const TArray<
 }
 
 /// <summary>
-/// 
+/// Return the CharacterClassInfo from the GameMode
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -649,7 +666,7 @@ UCharacterClassInfo* URPGAbilitySystemLibrary::GetCharacterClassInfo(const UObje
 }
 
 /// <summary>
-/// 
+/// Return the AbilityInfo from the GameMode
 /// </summary>
 /// <param name="WorldContextObject"></param>
 /// <returns></returns>
@@ -662,7 +679,7 @@ UAbilityInfo* URPGAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldConte
 }
 
 /// <summary>
-/// 
+/// Returns whether or not the hit was blocked from RPGContext
 /// </summary>
 /// <param name="EffectContextHandle"></param>
 /// <returns></returns>
@@ -677,7 +694,7 @@ bool URPGAbilitySystemLibrary::IsBlockedHit(const FGameplayEffectContextHandle& 
 }
 
 /// <summary>
-/// 
+/// Returns whether or not the hit was a crit from RPGContext
 /// </summary>
 /// <param name="EffectContextHandle"></param>
 /// <returns></returns>
@@ -691,6 +708,11 @@ bool URPGAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle&
 	return false;
 }
 
+/// <summary>
+/// Returns whether or not the hit had a successful debuff from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 bool URPGAbilitySystemLibrary::IsSuccessfulDebuff(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -700,6 +722,11 @@ bool URPGAbilitySystemLibrary::IsSuccessfulDebuff(const FGameplayEffectContextHa
 	return false;
 }
 
+/// <summary>
+/// Return the Debuff Damage from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 float URPGAbilitySystemLibrary::GetDebuffDamage(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -710,6 +737,11 @@ float URPGAbilitySystemLibrary::GetDebuffDamage(const FGameplayEffectContextHand
 	return 0.0f;
 }
 
+/// <summary>
+/// Return the Debuff Duration from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 float URPGAbilitySystemLibrary::GetDebuffDuration(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -720,6 +752,11 @@ float URPGAbilitySystemLibrary::GetDebuffDuration(const FGameplayEffectContextHa
 	return 0.0f;
 }
 
+/// <summary>
+/// Return the Debuff Frequency from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 float URPGAbilitySystemLibrary::GetDebuffFrequency(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -729,6 +766,11 @@ float URPGAbilitySystemLibrary::GetDebuffFrequency(const FGameplayEffectContextH
 	return 0.0f;
 }
 
+/// <summary>
+/// Return the Damage type from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 FGameplayTag URPGAbilitySystemLibrary::GetDamageType(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -741,6 +783,11 @@ FGameplayTag URPGAbilitySystemLibrary::GetDamageType(const FGameplayEffectContex
 	return FGameplayTag();
 }
 
+/// <summary>
+/// Return the Death Impulse from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 FVector URPGAbilitySystemLibrary::GetDealthImpulse(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -751,6 +798,11 @@ FVector URPGAbilitySystemLibrary::GetDealthImpulse(const FGameplayEffectContextH
 	return FVector::ZeroVector;
 }
 
+/// <summary>
+/// Return the KnockbackForce from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 FVector URPGAbilitySystemLibrary::GetKnockbackForce(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -761,6 +813,11 @@ FVector URPGAbilitySystemLibrary::GetKnockbackForce(const FGameplayEffectContext
 	return FVector::ZeroVector;
 }
 
+/// <summary>
+/// Return whether or not the damage is radial from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 bool URPGAbilitySystemLibrary::IsRadialDamage(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -770,6 +827,12 @@ bool URPGAbilitySystemLibrary::IsRadialDamage(const FGameplayEffectContextHandle
 	return false;
 }
 
+
+/// <summary>
+/// Return the RadialDamageInnerRadius from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 float URPGAbilitySystemLibrary::GetRadialDamageInnerRadius(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -779,6 +842,11 @@ float URPGAbilitySystemLibrary::GetRadialDamageInnerRadius(const FGameplayEffect
 	return 0.0f;
 }
 
+/// <summary>
+/// Return the RadialDamageOuterRadius from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 float URPGAbilitySystemLibrary::GetRadialDamageOuterRadius(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -788,6 +856,11 @@ float URPGAbilitySystemLibrary::GetRadialDamageOuterRadius(const FGameplayEffect
 	return 0.0f;
 }
 
+/// <summary>
+/// Return the RadialDamageOrigin from RPGContext
+/// </summary>
+/// <param name="EffectContextHandle"></param>
+/// <returns></returns>
 FVector URPGAbilitySystemLibrary::GetRadialDamageOrigin(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FRPGGameplayEffectContext* RPGContext = static_cast<const FRPGGameplayEffectContext*>(EffectContextHandle.Get()))

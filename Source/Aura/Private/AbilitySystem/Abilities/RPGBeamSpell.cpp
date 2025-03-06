@@ -10,7 +10,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 
 /// <summary>
-/// 
+/// Stores HitLocation and HitActor
 /// </summary>
 /// <param name="HitResult"></param>
 void URPGBeamSpell::StoreMouseDataInfo(const FHitResult& HitResult)
@@ -28,7 +28,7 @@ void URPGBeamSpell::StoreMouseDataInfo(const FHitResult& HitResult)
 }
 
 /// <summary>
-/// 
+/// Stores the Owners Character and Controller
 /// </summary>
 void URPGBeamSpell::StoreOwnerVariables()
 {
@@ -40,7 +40,7 @@ void URPGBeamSpell::StoreOwnerVariables()
 }
 
 /// <summary>
-/// 
+/// Traces for target under the mouse
 /// </summary>
 /// <param name="BeamTargetLocation"></param>
 void URPGBeamSpell::TraceFirstTarget(const FVector& BeamTargetLocation)
@@ -57,6 +57,7 @@ void URPGBeamSpell::TraceFirstTarget(const FVector& BeamTargetLocation)
 			FHitResult HitResult;
 			const FVector SocketLocation = Weapon->GetSocketLocation(WeaponSocketName);
 
+			// Trace for target
 			UKismetSystemLibrary::SphereTraceSingle(OwnerCharacter, SocketLocation, BeamTargetLocation, 10, TraceTypeQuery1, false, ActorsToIgnore, EDrawDebugTrace::None, HitResult, true);
 
 			// Hit Result hit something
@@ -70,7 +71,7 @@ void URPGBeamSpell::TraceFirstTarget(const FVector& BeamTargetLocation)
 }
 
 /// <summary>
-/// 
+/// Stores additional targets within a given radius
 /// </summary>
 /// <param name="OutAdditionalTargets"></param>
 void URPGBeamSpell::StoreAdditionalTargets(TArray<AActor*>& OutAdditionalTargets)
@@ -81,6 +82,7 @@ void URPGBeamSpell::StoreAdditionalTargets(TArray<AActor*>& OutAdditionalTargets
 
 	TArray<AActor*> OverlappingActors;
 
+	// Get all live players
 	URPGAbilitySystemLibrary::GetLivePlayersWithinRadius(GetAvatarActorFromActorInfo(), OverlappingActors, ActorsToIgnore, BeamChainRadius, MouseHitActor->GetActorLocation());
 
 	// Remove players from overlapped actors

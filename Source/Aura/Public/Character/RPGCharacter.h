@@ -10,6 +10,9 @@
 class UNiagaraComponent;
 class UCameraComponent;
 class USpringArmComponent;
+class ULoadScreenSaveGame;
+class URPGAbilitySystemComponent;
+struct FGameplayAbilitySpec;
 /**
  * 
  */
@@ -50,6 +53,8 @@ public:
 	virtual void HideMagicCircle_Implementation() override;
 	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/*End Player Interface*/
+
+	void SaveAbility(URPGAbilitySystemComponent* RPGASC, const FGameplayAbilitySpec& AbilitySpec, ULoadScreenSaveGame* SaveData);
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly)
 	TObjectPtr<UNiagaraComponent> LevelUpNiagaraComponent;

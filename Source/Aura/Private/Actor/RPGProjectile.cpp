@@ -70,7 +70,7 @@ void ARPGProjectile::Destroyed()
 }
 
 /// <summary>
-/// 
+/// Handles what happens when Projectile Hits a target
 /// </summary>
 void ARPGProjectile::OnHit()
 {
@@ -85,7 +85,7 @@ void ARPGProjectile::OnHit()
 }
 
 /// <summary>
-/// 
+/// Handles overlap functionality
 /// </summary>
 /// <param name="OverlappedComponent"></param>
 /// <param name="OtherActor"></param>
@@ -112,10 +112,6 @@ void ARPGProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, A
 			{
 				FRotator Rotation = GetActorRotation();
 				Rotation.Pitch = 45;
-
-				const FVector KnockbackDirection = Rotation.Vector();
-				const FVector KnockbackForce = KnockbackDirection * DamageEffectParams.KnockbackForceMagnitude;
-				DamageEffectParams.KnockbackForce = KnockbackForce;
 			}
 
 			DamageEffectParams.TargetAbilitySystemComponent = TargetASC;
@@ -131,7 +127,7 @@ void ARPGProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, A
 }
 
 /// <summary>
-/// 
+/// Return if overlap is valid
 /// </summary>
 /// <param name="OtherActor"></param>
 /// <returns></returns>

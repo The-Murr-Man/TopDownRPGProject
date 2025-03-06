@@ -3,6 +3,11 @@
 
 #include "AbilitySystem/Data/LevelUpInfo.h"
 
+/// <summary>
+/// Gets the level for given XP
+/// </summary>
+/// <param name="XP"></param>
+/// <returns></returns>
 int32 ULevelUpInfo::FindLevelForXP(int32 XP)
 {
     int32 Level = 1;

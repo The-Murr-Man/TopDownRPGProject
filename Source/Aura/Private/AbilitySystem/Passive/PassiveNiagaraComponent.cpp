@@ -39,7 +39,7 @@ void UPassiveNiagaraComponent::BeginPlay()
 }
 
 /// <summary>
-/// 
+/// Activate Passive Effect
 /// </summary>
 /// <param name="AbilityTag"></param>
 /// <param name="bActivate"></param>
@@ -59,6 +59,10 @@ void UPassiveNiagaraComponent::OnPassiveActivate(const FGameplayTag& AbilityTag,
 	}
 }
 
+/// <summary>
+/// Auto active if ability is equipped
+/// </summary>
+/// <param name="RPGASC"></param>
 void UPassiveNiagaraComponent::ActivateIfEquipped(URPGAbilitySystemComponent* RPGASC)
 {
 	const bool bStartupAbilitiesGiven = RPGASC->bStartupAbilitiesGiven;

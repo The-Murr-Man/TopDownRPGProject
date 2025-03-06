@@ -66,7 +66,7 @@ void APointCollection::BeginPlay()
 }
 
 /// <summary>
-/// 
+/// Returns an array of points that are grounded
 /// </summary>
 /// <param name="GroundLocation"></param>
 /// <param name="NumPoints"></param>
@@ -105,6 +105,7 @@ TArray<USceneComponent*> APointCollection::GetGroundPoints(const FVector GroundL
 
 		GetWorld()->LineTraceSingleByProfile(HitResult, RaisedLocation, LoweredLocation, FName("BlockAll"), QueryParams);
 
+		// Adjust the location so it is grounded
 		const FVector AdjustedLocation = FVector(Pt->GetComponentLocation().X, Pt->GetComponentLocation().Y, HitResult.ImpactPoint.Z);
 		Pt->SetWorldLocation(AdjustedLocation);
 		Pt->SetWorldRotation(UKismetMathLibrary::MakeRotFromZ(HitResult.ImpactNormal));

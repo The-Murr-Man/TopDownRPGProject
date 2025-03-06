@@ -11,10 +11,16 @@ void ARPGEnemySpawnPoint::SpawnEnemy()
 	// Spawn even if stuck
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
+	// Spawn Enemy
 	ARPGEnemy* Enemy = GetWorld()->SpawnActorDeferred<ARPGEnemy>(EnemyClass, GetActorTransform());
+
+	// Sets level and class of enemy
 	Enemy->SetEnemyLevel(EnemyLevel);
 	Enemy->SetCharacterClass(CharacterClass);
+
+	// Finishes Spawning
 	Enemy->FinishSpawning(GetActorTransform());
 
+	// Sets the controller
 	Enemy->SpawnDefaultController();
 }

@@ -63,6 +63,10 @@ void ARPGPlayerController::BeginPlay()
 	SetInputMode(InputModeData);
 }
 
+/// <summary>
+/// Shows the mouse cursor and updates its position
+/// </summary>
+/// <param name="bNewValue"></param>
 void ARPGPlayerController::SetShowMouseCursorAndForceRefresh(bool bNewValue)
 {
 	SetShowMouseCursor(bNewValue);
@@ -74,7 +78,7 @@ void ARPGPlayerController::SetShowMouseCursorAndForceRefresh(bool bNewValue)
 }
 
 /// <summary>
-/// 
+/// Shows the Magic circle decal
 /// </summary>
 /// <param name="DecalMaterial"></param>
 void ARPGPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
@@ -92,7 +96,7 @@ void ARPGPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
 }
 
 /// <summary>
-/// 
+/// Hides the magic circle decal
 /// </summary>
 void ARPGPlayerController::HideMagicCircle()
 {
@@ -103,7 +107,7 @@ void ARPGPlayerController::HideMagicCircle()
 }
 
 /// <summary>
-/// 
+/// Handles showing the damage number widget
 /// </summary>
 /// <param name="DamageAmount"></param>
 /// <param name="TargetCharacter"></param>
@@ -129,7 +133,7 @@ void ARPGPlayerController::ShowDamageNumber_Implementation(float DamageAmount, A
 }
 
 /// <summary>
-/// 
+/// Handles functionality for our mouse cursor trace
 /// </summary>
 void ARPGPlayerController::CursorTrace()
 {
@@ -144,6 +148,7 @@ void ARPGPlayerController::CursorTrace()
 		return;
 	}
 
+	// Setup TraceChannel to exclude players if showing magic circle
 	const ECollisionChannel TraceChannel = IsValid(MagicCircle) ? ECC_ExcludePlayers : ECC_Visibility;
 	GetHitResultUnderCursor(TraceChannel, false, CursorHit);
 
@@ -151,6 +156,7 @@ void ARPGPlayerController::CursorTrace()
 
 	LastActor = ThisActor;
 
+	// Check if the actor is valid and implements the HighlightInterface
 	if (IsValid(CursorHit.GetActor()) && CursorHit.GetActor()->Implements<UHighlightInterface>())
 	{
 		ThisActor = CursorHit.GetActor();
@@ -161,6 +167,7 @@ void ARPGPlayerController::CursorTrace()
 		ThisActor = nullptr;
 	}
 
+	// Check if ThisActor is a different actor
 	if (LastActor != ThisActor)
 	{
 		UnHighlightActor(LastActor);
@@ -169,7 +176,7 @@ void ARPGPlayerController::CursorTrace()
 }
 
 /// <summary>
-/// 
+/// Highlights given actor if they implement the HighlightInterface
 /// </summary>
 /// <param name="InActor"></param>
 void ARPGPlayerController::HighlightActor(AActor* InActor)
@@ -181,7 +188,7 @@ void ARPGPlayerController::HighlightActor(AActor* InActor)
 }
 
 /// <summary>
-/// 
+/// Unhighlights given actor if they implement the HighlightInterface
 /// </summary>
 /// <param name="InActor"></param>
 void ARPGPlayerController::UnHighlightActor(AActor* InActor)
@@ -193,13 +200,12 @@ void ARPGPlayerController::UnHighlightActor(AActor* InActor)
 }
 
 /// <summary>
-/// 
+/// Updates the location of the magic circle decal
 /// </summary>
 void ARPGPlayerController::UpdateMagicCircleLocation()
 {
 	if (IsValid(MagicCircle))
 	{
-
 		if (CursorHit.bBlockingHit)
 		{
 			MagicCircle->SetActorHiddenInGame(false);
@@ -213,7 +219,7 @@ void ARPGPlayerController::UpdateMagicCircleLocation()
 }
 
 /// <summary>
-/// 
+/// Handles pathfinding using a spline
 /// </summary>
 void ARPGPlayerController::AutoRun()
 {	
@@ -247,7 +253,6 @@ void ARPGPlayerController::SetupInputComponent()
 	if (!bUseClickToMove)
 	{
 		RPGInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARPGPlayerController::Move);
-		
 	}
 
 	else
@@ -281,7 +286,7 @@ void ARPGPlayerController::Move(const FInputActionValue& InputActionValue)
 }
 
 /// <summary>
-/// 
+/// Handles functionality for abilities being pressed
 /// </summary>
 /// <param name="InputTag"></param>
 void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
@@ -293,6 +298,7 @@ void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 	{
 		if (IsValid(ThisActor))
 		{
+			// Set TargetingStatus based on it the actor is an enemy
 			TargetingStatus = ThisActor->Implements<UEnemyInterface>() ? ETargetingStatus::TargetingEnemy : ETargetingStatus::TargetingNonEnemy;
 		}
 
@@ -308,7 +314,7 @@ void ARPGPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 }
 
 /// <summary>
-/// 
+/// Handles functionality for abilities being released
 /// </summary>
 /// <param name="InputTag"></param>
 void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
@@ -317,15 +323,12 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FRPGGameplayTags::Get().Player_Block_InputReleased)) return;
 
+	GetASC()->AbilityInputTagReleased(InputTag);
+
 	// If not Using Click to move, use ability TODO: Also check if targeting checkpoint
 	if (!bUseClickToMove)
 	{
 		if (!IsValid(ThisActor)) return;
-		
-		if ((TargetingStatus == ETargetingStatus::TargetingEnemy || TargetingStatus == ETargetingStatus::NotTargeting) && ThisActor->Implements<UHighlightInterface>())
-		{
-			GetASC()->AbilityInputTagReleased(InputTag);
-		}
 
 		else if(TargetingStatus == ETargetingStatus::TargetingNonEnemy && ThisActor->Implements<UHighlightInterface>())
 		{
@@ -336,15 +339,6 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 	// If Using Click to move
 	if (bUseClickToMove)
 	{
-		if (!InputTag.MatchesTagExact(FRPGGameplayTags::Get().InputTag_LMB))
-		{
-			GetASC()->AbilityInputTagReleased(InputTag);
-
-			return;
-		}
-		
-		GetASC()->AbilityInputTagReleased(InputTag);
-
 		// If HitResult is not an enemy and not holding shift key
 		if (TargetingStatus != ETargetingStatus::TargetingEnemy && !bShiftKeyDown)
 		{
@@ -363,6 +357,7 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 					UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ClickNiagaraSystem, CachedDestination);
 				}
 
+				// Get path to destination
 				if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CachedDestination))
 				{
 					Spline->ClearSplinePoints();
@@ -387,7 +382,7 @@ void ARPGPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 }
 
 /// <summary>
-/// 
+/// Handles functionality for abilities being held
 /// </summary>
 /// <param name="InputTag"></param>
 void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
@@ -434,7 +429,7 @@ void ARPGPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 }
 
 /// <summary>
-/// 
+/// Returns RPGAbilitySystemComponent
 /// </summary>
 /// <returns></returns>
 URPGAbilitySystemComponent* ARPGPlayerController::GetASC()
