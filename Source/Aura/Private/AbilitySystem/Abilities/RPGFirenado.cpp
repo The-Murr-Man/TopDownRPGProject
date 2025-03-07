@@ -1,9 +1,9 @@
 // Copyright Kyle Murray
 
 
-#include "AbilitySystem/Abilities/RPGArcaneShards.h"
+#include "AbilitySystem/Abilities/RPGFirenado.h"
 
-FString URPGArcaneShards::GetDescription(int32 Level)
+FString URPGFirenado::GetDescription(int32 Level)
 {
 	const int32 ScaledDamage = Damage.GetValueAtLevel(Level);
 	const float ManaCost = FMath::Abs(GetManaCost(Level));
@@ -13,7 +13,7 @@ FString URPGArcaneShards::GetDescription(int32 Level)
 	{
 		return FString::Printf(TEXT(
 			// Name
-			"<Title>Arcane Shards</>\n"
+			"<Title>Firenado</>\n"
 
 			// Level
 			"<Default>Level: %d</>\n"
@@ -25,8 +25,8 @@ FString URPGArcaneShards::GetDescription(int32 Level)
 			"<Small>Cooldown: </><Cooldown>%.1f</>\n\n"
 
 			// Description
-			"<Default>Spawns a cluster of Arcane energy dealing:</>"
-			"<ArcaneDamage> %d Arcane</>"
+			"<Default>Spawns a Tornado of fire dealing:</>"
+			"<FireDamage> %d Fire</>"
 			"<Default> damage within a radius </>"), Level, ManaCost, Cooldown, Level, ScaledDamage);
 	}
 
@@ -34,7 +34,7 @@ FString URPGArcaneShards::GetDescription(int32 Level)
 	{
 		return FString::Printf(TEXT(
 			// Name
-			"<Title>Arcane Shards</>\n"
+			"<Title>Firenado</>\n"
 
 			// Level
 			"<Default>Level: %d</>\n"
@@ -46,15 +46,15 @@ FString URPGArcaneShards::GetDescription(int32 Level)
 			"<Small>Cooldown: </><Cooldown>%.1f</>\n\n"
 
 			// Description
-			"<Default>Spawns %d clusters of Arcane energy dealing:</>"
+			"<Default>Spawns a Tornado of fire dealing:</>"
 
 			// Damage
-			"<ArcaneDamage> %d Arcane</>"
+			"<FireDamage> %d Fire</>"
 			"<Default> damage within a radius </>"), Level, ManaCost, Cooldown, Level, ScaledDamage);
 	}
 }
 
-FString URPGArcaneShards::GetNextLevelDescription(int32 Level)
+FString URPGFirenado::GetNextLevelDescription(int32 Level)
 {
 	const int32 ScaledDamage = Damage.GetValueAtLevel(Level);
 	const int32 LastLevelScaledDamage = Damage.GetValueAtLevel(Level - 1);
@@ -67,7 +67,7 @@ FString URPGArcaneShards::GetNextLevelDescription(int32 Level)
 
 	return FString::Printf(TEXT(
 		// Name
-		"<Title>Arcane Shards</>\n"
+		"<Title>Firenado</>\n"
 
 		// Level
 		"<Default>Level: %d > %d</>\n"
@@ -79,10 +79,10 @@ FString URPGArcaneShards::GetNextLevelDescription(int32 Level)
 		"<Small>Cooldown: </><Cooldown>%.1f > %.1f</>\n\n"
 
 		// Description
-		"<Default>Spawns %d clusters of Arcane energy dealing:</>"
+		"<Default>Spawns a Tornado of fire dealing:</>"
 
 		// Damage
-		"<ArcaneDamage> %d > %d Arcane</>"
+		"<FireDamage> %d > %d Fire</>"
 		"<Default> damage within a radius </>"),
 
 		//Values

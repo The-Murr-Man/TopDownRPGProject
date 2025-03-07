@@ -108,6 +108,7 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	GameplayTags.Abilities_Summon = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Summon"), FString("Summon Ability Tag"));
 	GameplayTags.Abilities_Fire_Firebolt = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.Firebolt"), FString("Firebolt Ability Tag"));
 	GameplayTags.Abilities_Fire_FireBlast = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.Fireblast"), FString("Fireblast Ability Tag"));
+	GameplayTags.Abilities_Fire_Firenado = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.Firenado"), FString("Firenado Ability Tag"));
 	GameplayTags.Abilities_Arcane_ArcaneShards = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Arcane.ArcaneShards"), FString("ArcaneShards Ability Tag"));
 	GameplayTags.Abilities_Lightning_Electrocute = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Lightning.Electrocute"), FString("Electrocute Ability Tag"));
 	GameplayTags.Abilities_HitReact = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.HitReact"), FString("Ability for reacting to being hit"));
@@ -135,6 +136,7 @@ void FRPGGameplayTags::InitializeNativeGameplayTags()
 	/*Adding Cooldown Tags To Gameplay Tags Manager->*/
 	GameplayTags.Cooldown_Fire_Firebolt = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.Firebolt"), FString("Firebolt Cooldown Tag"));
 	GameplayTags.Cooldown_Fire_Fireblast = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.Fireblast"), FString("Fireblast Cooldown Tag"));
+	GameplayTags.Cooldown_Fire_Firenado = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.Firenado"), FString("Firenado Cooldown Tag"));
 	GameplayTags.Cooldown_Lightning_Electrocute = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Lightning.Electrocute"), FString("Electrocute Cooldown Tag"));
 	GameplayTags.Cooldown_Arcane_ArcaneShards = UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Arcane.ArcaneShards"), FString("ArcaneShards Cooldown Tag"));
 	//Cooldown Tags End <-

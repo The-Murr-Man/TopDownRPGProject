@@ -15,7 +15,7 @@ FString URPGManaSiphon::GetDescription(int32 Level)
 
 		// Description
 		"<Default>Drains </>"
-		"<ManaCost>%d </><Default>mana from an enemy</>"), Level, ScaledSiphonedMana);
+		"<ManaCost>%d </><Default>mana from an enemy</>"), Level, 5);
 }
 
 FString URPGManaSiphon::GetNextLevelDescription(int32 Level)
@@ -28,9 +28,9 @@ FString URPGManaSiphon::GetNextLevelDescription(int32 Level)
 		"<Title>Mana Siphon</>\n"
 
 		// Level
-		"<Default>Level: %d > %d</>\n"
+		"<Default>Level: %d </>\n"
 
 		// Description
 		"<Default>Drains </>"
-		"<ManaCost>%d > %d </><Default>mana from an enemy</>"), Level - 1, Level, LastLevelScaledSiphonedMana, ScaledSiphonedMana);
+		"<ManaCost>%d </><Default>mana from an enemy</>"), Level, 5);
 }

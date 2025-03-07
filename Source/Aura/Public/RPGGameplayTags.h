@@ -108,6 +108,7 @@ public:
 	FGameplayTag Abilities_Summon;
 	FGameplayTag Abilities_Fire_Firebolt;
 	FGameplayTag Abilities_Fire_FireBlast;
+	FGameplayTag Abilities_Fire_Firenado;
 	FGameplayTag Abilities_Arcane_ArcaneShards;
 	FGameplayTag Abilities_Lightning_Electrocute;
 	FGameplayTag Abilities_HitReact;
@@ -135,6 +136,7 @@ public:
 	/*Cooldown Tags ->*/
 	FGameplayTag Cooldown_Fire_Firebolt;
 	FGameplayTag Cooldown_Fire_Fireblast;
+	FGameplayTag Cooldown_Fire_Firenado;
 	FGameplayTag Cooldown_Lightning_Electrocute;
 	FGameplayTag Cooldown_Arcane_ArcaneShards;
 	/*Cooldown Tags <-*/

@@ -15,7 +15,7 @@ FString URPGLifeSiphon::GetDescription(int32 Level)
 
 		// Description
 		"<Default>Drains </>"
-		"<FireDamage>%d </><Default>health from an enemy</>"), Level, ScaledSiphonDamage);
+		"<FireDamage>%d </><Default>health from an enemy</>"), Level, 5);
 }
 
 FString URPGLifeSiphon::GetNextLevelDescription(int32 Level)
@@ -28,9 +28,9 @@ FString URPGLifeSiphon::GetNextLevelDescription(int32 Level)
 		"<Title>Life Siphon</>\n"
 
 		// Level
-		"<Default>Level: %d > %d</>\n"
+		"<Default>Level: %d</>\n"
 
 		// Description
 		"<Default>Drains </>"
-		"<FireDamage>%d > %d </><Default>health from an enemy</>"), Level - 1, Level, LastLevelScaledSiphonDamage, ScaledSiphonDamage);
+		"<FireDamage>%d </><Default>health from an enemy</>"), Level, 5);
 }
